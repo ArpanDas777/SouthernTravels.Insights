@@ -1,0 +1,210 @@
+@model TicketServiceStatusPage
+@{
+    var q = Model.Query;
+    string[] ticketCols = { "", "Ticket Details", "File No.", "Passenger / Tour", "Pax", "Ticket Status", "Booking Exec", "OPS Status ", "Tour Period", "Days Left", "Financials", "Service", "Actions" };
+    string[] ticketAlign = { "", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c", "", "ta-c", "ta-c", "ta-r", "ta-c", "ta-c" };
+    string[] svcCols = { "Svc Type", "City", "Name of Service", "Category", "Meal Plan", "OPS User / Branch", "OPS Status", "Conf. Date", "Conf. No.", "Svc Start", "Svc End", "Days", "Action" };
+}
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results" data-frag="results">
+    <div class="legend">
+        <span class="swatch"></span>Files assigned to you (@SampleData.Me)
+        <button type="button" data-action="show-all" data-value="@(q.ShowAll ? "" : "1")">@(q.ShowAll ? "Show mine only" : "Show all")</button>
+    </div>
+
+    @if (Model.IsTicketView)
+    {
+        <div class="card">
+            <table class="tt">
+                <thead>
+                    <tr>
+                        @for (var i = 0; i < ticketCols.Length; i++)
+                        {
+                            <th class="@ticketAlign[i]">@ticketCols[i]</th>
+                        }
+                    </tr>
+                </thead>
+                @foreach (var r in Model.TicketRows)
+                {
+                    var t = r.T;
+                    <tbody>
+                        <tr class="row expandable @(r.Mine ? "mine" : r.Stripe % 2 == 1 ? "alt" : "")" data-key="@t.No">
+                            <td class="lead">
+                                <div class="stack">
+                                    <span class="mdot"></span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg>
+                                </div>
+                            </td>
+                            <td><div class="tno">@t.No</div><div class="sub">@t.Mbk</div></td>
+                            <td class="file">@Ui.FileNo(t.File)</td>
+                            <td><div class="fw6">@t.PaxName</div><div class="tour">@t.Tour</div></td>
+                            <td class="fw7">@t.Pax</td>
+                            <td>@Ui.Badge(t.Status, "nw")<div class="sub mt3">Booked: @Fmt.Date(t.Booked)</div></td>
+                            <td><div>@t.Exec</div><div class="sub">@t.Branch</div></td>
+                            <td>@Ui.Badge(t.OverallOps, "nw")<div class="sub mt3">@string.Join(" / ", t.Services.Select(s => s.OpsBranch).Distinct())</div></td>
+                            <td class="fs11"><div>@Fmt.Date(t.Start)</div><div class="c-mut fs10">to</div><div>@Fmt.Date(t.End)</div><div class="fw7 mt2">@t.Days days</div></td>
+                            <td><span class="dl @r.DaysLeftTone">@r.DaysLeftText</span></td>
+                            <td class="fin">
+                                @if (t.Balance > 0)
+                                {
+                                    <div class="bal">@Fmt.Inr(t.Balance)</div>
+                                    <div class="bal-cap">Bal. Pending · @Fmt.Pct0(t.Balance / t.Grand * 100)</div>
+                                    <div class="sub">@Fmt.Inr(t.Paid) paid · @Fmt.Pct0(t.Paid / t.Grand * 100)</div>
+                                }
+                                else
+                                {
+                                    <div class="paid-full">Fully Paid · 100%</div>
+                                }
+                                <div class="sub">@Fmt.Inr(t.Grand) total</div>
+                            </td>
+                            <td><span class="svc-n">@t.Services.Count</span></td>
+                            <td>
+                                <button type="button" class="act-btn" aria-label="Actions" data-menu="@t.No" data-vouchers="@(t.VouchersReady ? "1" : "0")">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="drill" hidden>
+                            <td colspan="13">
+                                <div class="drill-tbl-wrap">
+                                    <table class="svt">
+                                        <thead><tr>@foreach (var c in svcCols) {<th class="@(c is "Days" or "Action" ? "ta-c" : "")">@c</th>}</tr></thead>
+                                        <tbody>
+                                            @foreach (var s in t.Services)
+                                            {
+                                                <tr>
+                                                    <td>@Ui.Pill(s.Type, "nw")</td>
+                                                    <td>@s.City</td>
+                                                    <td class="name" title="@s.Name">@s.Name</td>
+                                                    <td>@s.Category</td>
+                                                    <td>@s.Meal</td>
+                                                    <td><div>@s.Ops</div><div class="fs10 c-mut">@s.OpsBranch</div></td>
+                                                    <td>@Ui.Badge(s.OpsStatus, "nw")</td>
+                                                    @if (s.Conf is null)
+                                                    {
+                                                        <td class="c-warn fw7">Pending</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@Fmt.Short(s.Conf.Value)</td>
+                                                    }
+                                                    <td>@s.ConfNo</td>
+                                                    <td>@Fmt.Short(s.Start)</td>
+                                                    <td>@Fmt.Short(s.End)</td>
+                                                    <td class="ta-c">@s.Days</td>
+                                                    <td class="ta-c">
+                                                        <button type="button" class="voucher @(s.VoucherReady ? "" : "off")"
+                                                                title="@(s.VoucherReady ? "Download voucher" : "Service must be completed and confirmed first")"
+                                                                data-toast="@(s.VoucherReady ? $"✓ Voucher for {s.Name} downloaded." : "Download unavailable – service not completed.")"
+                                                                data-toast-err="@(s.VoucherReady ? "0" : "1")">
+                                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"></path></svg>Voucher
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.TicketRows.Count == 0)
+                {
+                    <tbody><tr><td colspan="13" class="empty">No tickets match the current filters.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+    else
+    {
+        string[] cols = { "", "Vendor ID", "Vendor Name", "City / Cities", "Service Type(s)", "Tickets", "Total Sale Value", "Vendor Payable", "Balance Pending", "Active" };
+        <div class="card">
+            <table class="gt">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @{ var i = 0; }
+                @foreach (var g in Model.VendorRows)
+                {
+                    <tbody>
+                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@g.Id">
+                            <td class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></td>
+                            <td>@Ui.Ln(g.Id, "fw7 c-blue")</td>
+                            <td>@Ui.Ln(g.Name, "fw7")</td>
+                            <td>@Ui.Ln(g.Cities)</td>
+                            <td>@foreach (var ty in g.Types) {@Ui.LnHtml(Ui.Pill(ty))}</td>
+                            <td class="ta-c">@Ui.Ln(g.TicketCount, "fw7")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Sell), "fw7 c-blue")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable), "fw7")</td>
+                            <td class="ta-r">
+                                @if (g.Balance > 0)
+                                {
+                                    @Ui.Ln(Fmt.Inr(g.Balance), "fw7 c-red")
+                                    @Ui.Ln("to be paid", "fs9 c-mut")
+                                }
+                                else
+                                {
+                                    @Ui.Ln(Fmt.Inr(0), "c-grn")
+                                }
+                            </td>
+                            <td class="ta-c">@Ui.LnHtml(Ui.Badge(g.Active ? "Active" : "Inactive"))</td>
+                        </tr>
+                        <tr class="drill" hidden>
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">@g.Name — services</div>
+                                        <table class="st">
+                                            <thead>
+                                                <tr>
+                                                    <th>MBK / Ticket No.</th><th>File No.</th><th>Passenger</th><th class="ta-r">Grand / Paid / Balance</th>
+                                                    <th>Svc Type</th><th>City</th><th>Name of Service</th><th>Start / End</th>
+                                                    <th class="ta-r">Selling / Payable</th><th class="ta-r">Profit / %</th><th>Conf. Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var x in g.Items)
+                                                {
+                                                    var pf = x.S.Sell - x.S.Payable;
+                                                    <tr>
+                                                        <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
+                                                        <td>@Ui.FileNo(x.T.File, "fs105")</td>
+                                                        <td>@Ui.Ln(x.T.PaxName)</td>
+                                                        <td class="ta-r">@Ui.GrandPaidBalance(x.T.Grand, x.T.Paid)</td>
+                                                        <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
+                                                        <td>@Ui.Ln(x.S.City)</td>
+                                                        <td>@Ui.Ln(x.S.Name, "fw6")</td>
+                                                        <td>@Ui.Ln(Fmt.Short(x.S.Start))@Ui.Ln(Fmt.Short(x.S.End), "c-mut")</td>
+                                                        <td class="ta-r">
+                                                            @Ui.Ln(Fmt.Inr(x.S.Sell), "fw7")@Ui.Ln("sell", "fs9 c-mut")
+                                                            @Ui.Ln(Fmt.Inr(x.S.Payable), "c-blue mt3")@Ui.Ln("payable", "fs9 c-mut")
+                                                        </td>
+                                                        <td class="ta-r">
+                                                            @Ui.Ln(Fmt.Inr(pf), "fw7 c-grn")@Ui.Ln("profit", "fs9 c-mut")
+                                                            @Ui.Ln(Fmt.Fixed1(pf / x.S.Sell * 100) + "%", "mt3")@Ui.Ln("on sell", "fs9 c-mut")
+                                                        </td>
+                                                        <td>@Ui.Conf(x.S.Conf)</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.VendorRows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No vendors found.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

@@ -1,0 +1,10 @@
+@model Pager
+<div class="pager">
+    <span class="lbl">@Model.Label</span>
+    <div class="btns">
+        @foreach (var b in Model.Buttons)
+        {
+            <button type="button" class="@(b.Active ? "active" : "")" data-page="@b.Page" disabled="@(b.Disabled)">@b.Label</button>
+        }
+    </div>
+</div>

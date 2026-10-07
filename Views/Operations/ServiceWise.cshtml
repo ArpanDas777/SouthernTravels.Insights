@@ -1,0 +1,149 @@
+@model ServiceWisePage
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+    string VarCls(double v) => v >= 0 ? "c-grn" : "c-red";
+}
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results" data-frag="results">
+    @if (Model.IsVendorView)
+    {
+        string[] cols = { "", "MBK / Ticket", "Vendor ID", "Vendor Name", "Svc Start / End", "Days", "Service Type", "Service City", "Name of Service", "Category", "Meal Plan", "Conf. No." };
+        <div class="card">
+            <table class="gt">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @{ var i = 0; }
+                @foreach (var x in Model.Rows)
+                {
+                    <tbody>
+                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@x.Id">
+                            <td class="chev">@Html.Raw(Chevron)</td>
+                            <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
+                            <td>@Ui.Ln(x.S.VendorId, "c-mut")</td>
+                            <td>@Ui.Ln(x.VendorName, "fw7")</td>
+                            <td>@Ui.Ln(Fmt.Date(x.S.Start))@Ui.Ln("to", "fs9 c-mut")@Ui.Ln(Fmt.Date(x.S.End))</td>
+                            <td class="ta-c">@Ui.Ln(x.S.Days + "d")</td>
+                            <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
+                            <td>@Ui.Ln(x.S.City)</td>
+                            <td>@Ui.Ln(x.S.Name, "fw6", x.S.Name)</td>
+                            <td>@Ui.Ln(x.S.Category)</td>
+                            <td>@Ui.Ln(x.S.Meal)</td>
+                            <td>@Ui.Ln(x.S.ConfNo, x.S.Conf is null ? "c-amb fw7" : "")</td>
+                        </tr>
+                        <tr class="drill" hidden>
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">Financial Details — @x.T.No / @x.T.Mbk</div>
+                                        <div class="facts">
+                                            <div><div class="fact-l">Pax</div><div class="fact-v">@x.T.Pax</div></div>
+                                            <div><div class="fact-l">Base price + margin</div><div class="fact-v">@Fmt.Inr(x.BaseMargin)</div></div>
+                                            <div><div class="fact-l">Discount</div><div class="fact-v @(x.Discount > 0 ? "c-red" : "")">@(x.Discount > 0 ? "−" + Fmt.Inr(x.Discount) : "-")</div></div>
+                                            <div><div class="fact-l">GST</div><div class="fact-v">+@Fmt.Inr(x.Gst)</div></div>
+                                            <div><div class="fact-l">Grand Total</div><div class="fact-v">@Fmt.Inr(x.T.Grand)</div></div>
+                                            <div><div class="fact-l">Selling rate</div><div class="fact-v">@Fmt.Inr(x.S.Sell)</div></div>
+                                            <div><div class="fact-l">Contracted rate</div><div class="fact-v">@Fmt.Inr(x.Contracted)</div></div>
+                                            <div><div class="fact-l">Negotiated rate</div><div class="fact-v c-blue">@Fmt.Inr(x.Negotiated)</div></div>
+                                            <div><div class="fact-l">Variation (Con − Neg)</div><div class="fact-v @VarCls(x.Variation)">@Fmt.Signed(x.Variation)</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.Rows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No services match filters. Sorted oldest → newest service start date.</td></tr></tbody>
+                }
+            </table>
+        </div>
+        if (Model.Pager is not null)
+        {
+            <partial name="_Pager" model="Model.Pager" />
+        }
+    }
+    else
+    {
+        string[] cols = { "", "Service City","Total Duration (days)", "Total Selling", "Total Contracted", "Total Negotiated", "Total Variation", "Total Vendors", "Total Pax" };
+        <div class="card">
+            <table class="gt">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @{ var i = 0; }
+                @foreach (var g in Model.Groups)
+                {
+                    <tbody>
+                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@g.Key">
+                            <td class="chev">@Html.Raw(Chevron)</td>
+                            <td>@Ui.Two(g.Key, ServiceWisePage.StateOf.GetValueOrDefault(g.Key, ""), "c-navy fs13")</td>
+                            <td>@Ui.Ln(g.Days + "d")</td>
+                            <td>@Ui.Ln(Fmt.Inr(g.Sell), "fw7")</td>
+                            <td>@Ui.Ln(Fmt.Inr(g.Contracted))</td>
+                            <td>@Ui.Ln(Fmt.Inr(g.Negotiated))</td>
+                            <td>@Ui.Ln(Fmt.Signed(g.Variation), "fw7 " + VarCls(g.Variation))</td>
+                            <td>@Ui.LnHtml(Ui.Count(g.Vendors))</td>
+                            <td>@Ui.Ln(g.Pax)</td>
+                        </tr>
+                        <tr class="drill" hidden>
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">Services</div>
+                                        <table class="st">
+                                            <thead>
+                                                <tr>
+                                                    <th>MBK / Ticket</th><th class="ta-c">Pax</th><th class="ta-r">Tour Price</th><th>Vendor</th>
+                                                    <th>Svc Type</th>
+                                                    <th>City</th><th>Name of Service</th><th>Category</th><th>Meal Plan</th><th>Conf No.</th>
+                                                    <th>Start / End</th><th class="ta-r">Sell / Con / Neg</th><th class="ta-r">Variation</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var x in g.Items)
+                                                {
+                                                    <tr>
+                                                        <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
+                                                        <td class="ta-c">@Ui.Ln(x.T.Pax, "fw7")</td>
+                                                        <td class="ta-r">
+                                                            @Ui.Ln(Fmt.Inr(x.BaseMargin), "fw7")@Ui.Ln("base + margin", "fs9 c-mut")
+                                                            @if (x.Discount > 0) {@Ui.Ln("−" + Fmt.Inr(x.Discount), "c-red fs105")}
+                                                            @Ui.Ln("+" + Fmt.Inr(x.Gst) + " GST", "fs105 c-mut")
+                                                            @Ui.Ln(Fmt.Inr(x.T.Grand), "fw7 mt3 fs12")@Ui.Ln("grand total", "fs9 c-mut")
+                                                        </td>
+                                                        <td>@Ui.Two(x.S.VendorId, x.VendorName)</td>
+                                                        <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
+                                                        <td>@Ui.Ln(x.S.City)</td>
+                                                        <td>@Ui.Ln(x.S.Name, "fw6")</td>
+                                                        <td>@Ui.Ln(x.S.Category)</td>
+                                                        <td>@Ui.Ln(x.S.Meal)</td>
+                                                        <td>@Ui.Ln(x.S.ConfNo, x.S.Conf is null ? "c-amb fw7" : "")</td>
+                                                        <td>@Ui.StartEnd(x.S.Start, x.S.End, x.S.Days)</td>
+                                                        <td class="ta-r">
+                                                            @Ui.Ln(Fmt.Inr(x.S.Sell), "fw7")@Ui.Ln("sell", "fs9 c-mut")
+                                                            @Ui.Ln(Fmt.Inr(x.Contracted), "c-mut")@Ui.Ln("contracted", "fs9 c-mut")
+                                                            @Ui.Ln(Fmt.Inr(x.Negotiated), "c-blue")@Ui.Ln("negotiated", "fs9 c-mut")
+                                                        </td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Signed(x.Variation), "fw7 " + VarCls(x.Variation))</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.Groups.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No data.</td></tr></tbody>
+                }
+            </table>
+        </div>
+        if (Model.Pager is not null)
+        {
+            <partial name="_Pager" model="Model.Pager" />
+        }
+    }
+</div>

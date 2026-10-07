@@ -1,0 +1,162 @@
+@model VendorPaymentPage
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+}
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results" data-frag="results">
+    @if (Model.IsVendorView)
+    {
+        string[] cols = { "", "Vendor ID", "Vendor Name", "Service Type(s)", "City/Cities", "Total Services", "Total Duration", "Total Pax", "Total Business" };
+        <div class="card">
+            <table class="gt">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @{ var i = 0; }
+                @foreach (var g in Model.VendorRows)
+                {
+                    <tbody>
+                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@g.Id">
+                            <td class="chev">@Html.Raw(Chevron)</td>
+                            <td>@Ui.Ln(g.Id, "fw7 c-blue")</td>
+                            <td>@Ui.Ln(g.Name, "fw7 fs13")</td>
+                            <td>@foreach (var ty in g.Types) {@Ui.Ln(ty)}</td>
+                            <td>@Ui.Ln(g.Cities, "c-mut")</td>
+                            <td>@Ui.LnHtml(Ui.Count(g.Items.Count))</td>
+                            <td>@Ui.Ln(g.Days + "d")</td>
+                            <td>@Ui.Ln(g.Pax)</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable), "fw8 c-blue fs13")</td>
+                        </tr>
+                        <tr class="drill" hidden>
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">@g.Name — services</div>
+                                        <table class="st st-tight dense">
+                                            <thead>
+                                                <tr>
+                                                    <th>MBK / Ticket</th><th>File No.</th><th>Passenger / Pax</th><th>Booking / Branch</th>
+                                                    <th class="ta-c">Grand / Paid / Balance</th><th>Ticket Status</th><th>OPS User / Branch</th><th>OPS Status</th>
+                                                    <th>Tour Start / Dur.</th><th>Svc Type</th><th>City</th><th>Name of Service</th>
+                                                    <th>No. / Category</th><th>Meal Plan</th><th>Conf. Date / No.</th>
+                                                    <th>Start / End</th><th class="ta-r">Vendor Payable</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var x in g.Items)
+                                                {
+                                                    <tr>
+                                                        <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
+                                                        <td>@Ui.FileNo(x.T.File, "c-mut")</td>
+                                                        <td>@Ui.Two(x.T.PaxName, x.T.Pax + " pax", "fw4")</td>
+                                                        <td>@Ui.Two(x.T.Exec, x.T.Branch)</td>
+                                                        <td class="ta-c">@Ui.GrandPaidBalance(x.T.Grand, x.T.Paid)</td>
+                                                        <td>@Ui.LnHtml(Ui.Badge(x.T.Status))</td>
+                                                        <td>@Ui.Two(x.S.Ops, x.S.OpsBranch)</td>
+                                                        <td>@Ui.LnHtml(Ui.Badge(x.S.OpsDisplay))</td>
+                                                        <td>@Ui.Ln(Fmt.Short(x.T.Start))@Ui.Ln(x.T.Days + "d", "fw7")</td>
+                                                        <td>@Ui.Ln(x.S.Type)</td>
+                                                        <td>@Ui.Ln(x.S.City)</td>
+                                                        <td>@Ui.Ln(x.S.Name, "fw6")</td>
+                                                        <td>@Ui.Ln(x.Rooms)@Ui.Ln(x.S.Category, "c-mut")</td>
+                                                        <td>@Ui.Ln(x.S.Meal)</td>
+                                                        <td>@Ui.Conf(x.S.Conf)@Ui.Ln(x.S.ConfNo, "c-mut")</td>
+                                                        <td>@Ui.StartEnd(x.S.Start, x.S.End, x.S.Days)</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(x.S.Payable), "fw8 c-blue")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.VendorRows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No vendors found.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+    else
+    {
+        string[] cols = { "", "Ticket / MBK", "File No.", "Passenger", "Pax", "Booking Exec / Branch", "Grand Total", "Paid", "Balance", "Ticket Status", "OPS User / Branch", "OPS Status", "Tour Start", "Tour Days", "Total Business" };
+        <div class="card">
+            <table class="gt">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @{ var i = 0; }
+                @foreach (var g in Model.TicketRows)
+                {
+                    var t = g.T;
+                    <tbody>
+                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@t.No">
+                            <td class="chev">@Html.Raw(Chevron)</td>
+                            <td>@Ui.Two(t.No, t.Mbk, "c-blue")</td>
+                            <td>@Ui.FileNo(t.File, "fs105 c-mut")</td>
+                            <td>@Ui.Ln(t.PaxName)</td>
+                            <td class="ta-c">@Ui.Ln(t.Pax, "fw7")</td>
+                            <td>@Ui.Two(t.Exec, t.Branch)</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(t.Grand), "fw7")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(t.Paid), "c-grn")</td>
+                            <td class="ta-r">@(t.Balance > 0 ? Ui.Ln(Fmt.Inr(t.Balance), "fw7 c-red") : Ui.Ln("Nil", "c-grn"))</td>
+                            <td>@Ui.LnHtml(Ui.Badge(t.Status))</td>
+                            <td>@Ui.Two(g.OpsUsers, g.OpsBranches)</td>
+                            <td>@Ui.LnHtml(Ui.Badge(t.OverallOps))</td>
+                            <td>@Ui.Ln(Fmt.Date(t.Start))</td>
+                            <td>@Ui.Ln(t.Days + "d")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable), "fw8 c-blue fs13")</td>
+                        </tr>
+                        <tr class="drill" hidden>
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">@t.No — services</div>
+                                        <table class="st">
+                                            <thead>
+                                                <tr>
+                                                    <th>Vendor</th><th>Svc Type</th><th>City</th><th>Name of Service</th><th class="ta-r">No./Rooms</th>
+                                                    <th>Category</th><th>Meal Plan</th><th>Conf. Date</th><th>Conf. No.</th><th>OPS User</th>
+                                                    <th>OPS Status</th><th>Start / End</th><th class="ta-r">Vendor Payable</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var x in g.Items)
+                                                {
+                                                    <tr>
+                                                        <td>@Ui.Two(x.VendorName, x.S.VendorId, "fw7")</td>
+                                                        <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
+                                                        <td>@Ui.Ln(x.S.City)</td>
+                                                        <td>@Ui.Ln(x.S.Name, "fw6")</td>
+                                                        <td class="ta-r">@Ui.Ln(x.Rooms)</td>
+                                                        <td>@Ui.Ln(x.S.Category)</td>
+                                                        <td>@Ui.Ln(x.S.Meal)</td>
+                                                        <td>@Ui.Conf(x.S.Conf)</td>
+                                                        <td>@Ui.Ln(x.S.ConfNo)</td>
+                                                        <td>@Ui.Ln(x.S.Ops)</td>
+                                                        <td>@Ui.LnHtml(Ui.Badge(x.S.OpsDisplay))</td>
+                                                        <td>@Ui.StartEnd(x.S.Start, x.S.End, x.S.Days)</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(x.S.Payable), "fw8 c-blue")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.TicketRows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No tickets found.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>
