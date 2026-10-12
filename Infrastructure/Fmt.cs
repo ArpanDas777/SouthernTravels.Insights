@@ -4,6 +4,8 @@ namespace SouthernTravels.Insights.Infrastructure;
 
 public static class Fmt
 {
+
+
     private static readonly string[] Mon = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
     /// <summary>JavaScript Math.round semantics (half rounds up).</summary>
@@ -47,6 +49,4 @@ public static class Fmt
 
     public static string Iso(DateTime d) => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    public static DateTime? ParseIso(string? s) =>
-        DateTime.TryParseExact(s, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
 }

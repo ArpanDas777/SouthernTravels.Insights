@@ -1,0 +1,93 @@
+@model DailyEmpSalesPage
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results" style="flex:none">
+    @if (!Model.IsComparison)
+    {
+        <div class="card grow-none">
+            <table class="gt cards @(Model.IsMonthView ? "t-emp-month" : "t-emp-day")">
+                <thead>
+                    <tr class="weeks">
+                        <th class="lab"></th>
+                        @foreach (var w in Model.Weeks)
+                        {
+                            <th><span class="wk-btn">▸ @w.Label</span></th>
+                        }
+                        <th colspan="4"></th>
+                    </tr>
+                    <tr>
+                        <th class="lab min84"><div class="l">Employee</div><div class="l2"></div></th>
+                        @foreach (var w in Model.Weeks)
+                        {
+                            <th><div class="l">@w.Label total</div><div class="l2"></div></th>
+                        }
+                        <th><div class="l">Target (Current Year)</div></th>
+                        <th><div class="l">Target till date</div></th>
+                        <th><div class="l">Sales till date</div></th>
+                        <th><div class="l">Achv %</div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr class="row @r.Kind @(r.Kind == "gsum" ? "gtop" : "")">
+                            @SalesHtml.Lab(r.Name, r.Sub, r.Kind == "emp" ? "fw5 fs11" : r.Kind == "grp" ? "fw7 fs11 c-navy" : "fw8 fs11 c-navy", r.Kind == "emp" ? "padding:5px 8px" : "", toggle: true)
+                            @foreach (var c in r.Cells) { @SalesHtml.Amt(c, r.Kind == "emp" ? "" : r.Kind == "grp" ? "fw7" : "fw8") }
+                            @SalesHtml.Amt(r.Fy, r.Kind == "emp" ? "" : r.Kind == "grp" ? "fw7" : "fw8")
+                            @SalesHtml.Amt(r.Target, r.Kind == "emp" ? "" : r.Kind == "grp" ? "fw7" : "fw8")
+                            @SalesHtml.Amt(r.Sales, r.Kind == "emp" ? "fw7" : r.Kind == "grp" ? "fw7" : "fw8")
+                            @SalesHtml.Ach(r.Ach)
+                        </tr>
+                    }
+                    @if (Model.Rows.Count == 0)
+                    {
+                        <tr><td colspan="@Model.ColumnCount" class="empty">No employees found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        @* Comparison, period to date: three measure lines per entity; the base year shows its value and the change against this year. *@
+        <div class="card grow-none keep-scroll">
+            <table class="gt" data-nocards>
+                <thead>
+                    <tr class="weeks">
+                        <th class="lab"></th><th></th>
+                        <th><span class="wk-btn static">Current</span></th>
+                        <th><span class="wk-btn static">@Model.BaseYearLabel</span></th>
+                    </tr>
+                    <tr>
+                        <th class="lab min84"><div class="l">Employee</div></th>
+                        <th class="ta-l"><div class="l" style="text-align:left">Measure</div></th>
+                        <th><div class="l">Current</div></th>
+                        <th><div class="l">Base vs current</div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model.CmpRows)
+                    {
+                        for (var i = 0; i < e.Lines.Count; i++)
+                        {
+                            var ln = e.Lines[i];
+                            <tr class="row @e.Kind @(i == 0 ? "top-rule" : "") @(e.Kind == "gsum" && i == 0 ? "gtop" : "")">
+                                @if (i == 0) { @SalesHtml.Lab(e.Name, e.Sub, e.Kind == "emp" ? "fw5 fs11" : e.Kind == "grp" ? "fw7 fs11 c-navy" : "fw8 fs11 c-navy", "padding:4px 8px") }
+                                else { @SalesHtml.BlankLab() }
+                                @SalesHtml.Label(ln.Label, "fs10 c-mut")
+                                @if (ln.CurrentAch is not null) { @SalesHtml.Ach(ln.CurrentAch) }
+                                else { @SalesHtml.Mc(ln.CurrentText, ln.CurrentCls) }
+                                @SalesHtml.Mc(ln.Base.Text, "c-mut", (ln.Base.VarText, ln.Base.VarCls))
+                            </tr>
+                        }
+                    }
+                    @if (Model.CmpRows.Count == 0)
+                    {
+                        <tr><td colspan="4" class="empty">No employees found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

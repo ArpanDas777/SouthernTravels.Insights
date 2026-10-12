@@ -5,34 +5,33 @@
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 
-<div class="results" data-frag="results">
+<div class="results">
     @if (Model.IsVendorView)
     {
         string[] cols = { "", "Vendor ID", "Vendor Name", "Service Type(s)", "City/Cities", "Total Services", "Total Duration", "Total Pax", "Total Business" };
         <div class="card">
-            <table class="gt">
+            <table class="gt cards t-vp-vendor">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
-                @{ var i = 0; }
                 @foreach (var g in Model.VendorRows)
                 {
                     <tbody>
-                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@g.Id">
-                            <td class="chev">@Html.Raw(Chevron)</td>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
                             <td>@Ui.Ln(g.Id, "fw7 c-blue")</td>
                             <td>@Ui.Ln(g.Name, "fw7 fs13")</td>
-                            <td>@foreach (var ty in g.Types) {@Ui.Ln(ty)}</td>
+                            <td>@foreach (var ty in g.Types) {@Ui.LnHtml(Ui.Pill(ty))}</td>
                             <td>@Ui.Ln(g.Cities, "c-mut")</td>
-                            <td>@Ui.LnHtml(Ui.Count(g.Items.Count))</td>
+                            <td>@Ui.LnHtml(Ui.Count(g.ServiceCount))</td>
                             <td>@Ui.Ln(g.Days + "d")</td>
                             <td>@Ui.Ln(g.Pax)</td>
                             <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable), "fw8 c-blue fs13")</td>
                         </tr>
-                        <tr class="drill" hidden>
+                        <tr class="drill">
                             <td colspan="@cols.Length">
                                 <div class="drill-in">
                                     <div class="sec">
                                         <div class="sec-t">@g.Name — services</div>
-                                        <table class="st st-tight dense">
+                                        <table class="st st-tight dense cards t-vp-vendor-d">
                                             <thead>
                                                 <tr>
                                                     <th>MBK / Ticket</th><th>File No.</th><th>Passenger / Pax</th><th>Booking / Branch</th>
@@ -50,7 +49,7 @@
                                                         <td>@Ui.FileNo(x.T.File, "c-mut")</td>
                                                         <td>@Ui.Two(x.T.PaxName, x.T.Pax + " pax", "fw4")</td>
                                                         <td>@Ui.Two(x.T.Exec, x.T.Branch)</td>
-                                                        <td class="ta-c">@Ui.GrandPaidBalance(x.T.Grand, x.T.Paid)</td>
+                                                        <td class="ta-c">@Ui.GrandPaidBalance(x.T)</td>
                                                         <td>@Ui.LnHtml(Ui.Badge(x.T.Status))</td>
                                                         <td>@Ui.Two(x.S.Ops, x.S.OpsBranch)</td>
                                                         <td>@Ui.LnHtml(Ui.Badge(x.S.OpsDisplay))</td>
@@ -84,15 +83,14 @@
     {
         string[] cols = { "", "Ticket / MBK", "File No.", "Passenger", "Pax", "Booking Exec / Branch", "Grand Total", "Paid", "Balance", "Ticket Status", "OPS User / Branch", "OPS Status", "Tour Start", "Tour Days", "Total Business" };
         <div class="card">
-            <table class="gt">
+            <table class="gt cards t-vp-ticket">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
-                @{ var i = 0; }
                 @foreach (var g in Model.TicketRows)
                 {
                     var t = g.T;
                     <tbody>
-                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@t.No">
-                            <td class="chev">@Html.Raw(Chevron)</td>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
                             <td>@Ui.Two(t.No, t.Mbk, "c-blue")</td>
                             <td>@Ui.FileNo(t.File, "fs105 c-mut")</td>
                             <td>@Ui.Ln(t.PaxName)</td>
@@ -108,12 +106,12 @@
                             <td>@Ui.Ln(t.Days + "d")</td>
                             <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable), "fw8 c-blue fs13")</td>
                         </tr>
-                        <tr class="drill" hidden>
+                        <tr class="drill">
                             <td colspan="@cols.Length">
                                 <div class="drill-in">
                                     <div class="sec">
                                         <div class="sec-t">@t.No — services</div>
-                                        <table class="st">
+                                        <table class="st cards t-vp-ticket-d">
                                             <thead>
                                                 <tr>
                                                     <th>Vendor</th><th>Svc Type</th><th>City</th><th>Name of Service</th><th class="ta-r">No./Rooms</th>

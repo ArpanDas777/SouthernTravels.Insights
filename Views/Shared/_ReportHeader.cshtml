@@ -1,32 +1,25 @@
 @model ReportPage
-@* Shared Period control (all reports except OPS User Workload) + title with the "i" description tooltip. *@
+@* Shared Period selector (visual only) + title with the "i" description tooltip (CSS hover / focus) and any report-specific title controls. *@
 @if (Model.ShowPeriod)
 {
-    var q = Model.Query;
     <div class="period">
         <span class="cap">Period</span>
-        <select data-action="period" aria-label="Period">
-            @foreach (var o in ReportQuery.PeriodOptions)
+        <select aria-label="Period">
+            @foreach (var o in ReportPage.PeriodOptions)
             {
-                <option value="@o" selected="@(q.Period == o)">@o</option>
+                <option value="@o">@o</option>
             }
         </select>
-        <span class="fc" data-custom hidden="@(q.Period != "Custom")">
-            <input type="date" aria-label="From" data-action="pf" value="@q.PFrom" />
-            <span class="to">to</span>
-            <input type="date" aria-label="To" data-action="pt" value="@q.PTo" />
-        </span>
-        <span class="fc" data-frag="periodnote">
-            @if (q.PeriodRange is not null)
-            {
-                <span class="note">@q.PeriodNote(Model.PeriodField)</span>
-                <button type="button" class="btn-clear" data-action="clear-period">Clear</button>
-            }
-        </span>
     </div>
 }
 <div class="title-row">
     <h2>@Model.Title</h2>
     <button type="button" class="info-btn" aria-label="About this report">i</button>
     <div class="desc-pop" role="tooltip">@Model.Description</div>
+    <div class="title-ctl">
+        @if (Model.TitleControls is not null)
+        {
+            <partial name="@Model.TitleControls" model="Model" />
+        }
+    </div>
 </div>

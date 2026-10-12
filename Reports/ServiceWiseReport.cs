@@ -22,16 +22,19 @@ public sealed class ServiceWisePage : ReportPage
     };
 
     public bool IsVendorView => ActiveTab == "vendor";
+    public bool IsTrialBalance => ActiveTab == "tb";
+    public TrialBalance? Tb { get; set; }
     public List<ServiceRow> Rows { get; set; } = new();
     public List<ServiceGroup> Groups { get; set; } = new();
 }
 
 public static class ServiceWiseReport
 {
-    private static readonly TabDef[] Tabs = { new("vendor", "Vendor Wise"), new("city", "Service City-wise") };
+    private static readonly TabDef[] Tabs = { new("vendor", "Vendor Wise"), new("city", "Service City-wise"), new("tb", "Trial Balance") };
 
     public static ServiceWisePage Build(ReportQuery q)
     {
+        var tab = ReportPage.ResolveTab(q, Tabs);
         var page = new ServiceWisePage
         {
             Id = "r3",
@@ -39,18 +42,16 @@ public static class ServiceWiseReport
             Description = "Service wise Report — cross-sectional view of all services grouped by Vendor, Service City, and Service Type. Primary tool for destination-level planning, vendor management, and on-ground operational coordination.",
             Query = q,
             SearchPlaceholder = "Search Ticket No., Vendor Name, Name of Service...",
-            PeriodField = "Service Start Date",
+            PeriodField = tab == "tb" ? "" : "Service Start Date",
             Tabs = Tabs,
-            ActiveTab = ReportPage.ResolveTab(q, Tabs),
+            ActiveTab = tab,
+            ToolbarExtra = tab == "tb" ? "_TrialBalanceControls" : null,
+            HasExpand = tab != "tb",
             Filters = CommonFilters.TicketService,
             DateFields = CommonFilters.TicketServiceDates,
         };
 
-        // Filtering is per service; ticket-level filters are checked against the parent ticket.
-        var f = ServiceRow.All()
-            .Where(x => q.OkPeriod(x.S.Start) && q.OkSearch(x.T.No + " " + x.T.Mbk + " " + x.VendorName + " " + x.S.Name))
-            .Where(x => CommonFilters.TicketLevel(x.T, q) && CommonFilters.ServiceLevel(x.S, q))
-            .ToList();
+        var f = ServiceRow.All();
 
         var today = SampleData.Today;
         var n7 = f.Count(x => x.S.Start >= today && x.S.Start <= today.AddDays(7));
@@ -64,7 +65,23 @@ public static class ServiceWiseReport
         };
         page.ResultLabel = f.Count + " services";
 
-        if (page.IsVendorView)
+        if (page.IsTrialBalance)
+        {
+            var tb = page.Tb = TrialBalance.Build();
+            page.ResultLabel = "";
+            if (tb.VendorId is not null)
+            {
+                page.Kpis.Add(new Kpi("Vendor", SampleData.VendorName(tb.VendorId), Sub: tb.VendorId));
+                page.Kpis.Add(new Kpi("Period", tb.Period, Sub: tb.Fy));
+                page.Kpis.Add(new Kpi("Currency", tb.Currency, Big: true));
+                // Closing balance and the ledger read from the same running totals.
+                page.Kpis.Add(new Kpi("Closing balance", tb.ClosingAmountText, tb.ClosingColor, true, tb.ClosingNote));
+                page.Kpis.Add(new Kpi("Dr = Cr check", tb.Balanced ? "✓ Balanced" : "✗ Mismatch", tb.Balanced ? "var(--ok-ink)" : "var(--color-danger)", true,
+                    "Dr " + tb.Money(tb.DrSide) + " · Cr " + tb.Money(tb.CrSide)));
+                page.ResultLabel = tb.EntryCount + " entries";
+            }
+        }
+        else if (page.IsVendorView)
         {
             page.Kpis.Add(new Kpi("Next 7 Days", n7.ToString(), n7 > 0 ? "var(--alert-ink)" : "var(--color-navy)", true));
             page.Kpis.Add(new Kpi("Total Services", f.Count.ToString(), Big: true));

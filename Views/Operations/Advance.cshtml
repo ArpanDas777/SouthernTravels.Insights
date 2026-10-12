@@ -2,23 +2,15 @@
 @using Microsoft.AspNetCore.Html
 @{
     const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
-    string[] cols = { "", "MBK / Ticket", "Ticket Status", "Passenger / Pax", "Booking Exec / Branch", "Tour Period", "Vendor Details", "Service Name", "Service Start / Due", "Service Amount", "Balance / Prev. Adv. Paid", "Adv. Requested", "Requested By", "Approvals", "Adv. Payment" };
+    string[] cols = { "", "MBK / Ticket", "Ticket Status", "Passenger Info", "Booking Executive", "Tour Period", "Vendor Details", "Service Name", "Service Start / Due", "Service Amount", "Balance / Prev. Adv. Paid", "Adv. Requested", "Requested By", "Approvals", "Adv. Payment" };
 
-    // "L1 ✓" / "L2 !" / "L2 –" approval line; Approved shows the approver in a native tooltip.
-    IHtmlContent Approval(string tag, string status, string by, string on) => status == "-"
-        ? Ui.Ln(tag + "  –", "c-mut fs12 mt2")
-        : Ui.Ln(tag + "  " + (status == "Approved" ? "✓" : "!"),
-            (status == "Approved" ? "c-grn" : status == "Rejected" ? "c-red" : "c-amb") + " fw8 fs13 mt2",
-            status + (status == "Approved" ? " · " + by + " · " + on : ""));
-
-    (string State, string Glyph) Step(string s) => s switch { "done" => ("done", "✓"), "wait" => ("wait", "!"), "bad" => ("bad", "!"), _ => ("skip", "–") };
 }
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 
-<div class="results" data-frag="results">
+<div class="results">
     <div class="card">
-        <table class="gt dense">
+        <table class="gt dense cards t-adv">
             <thead>
                 <tr>
                     @foreach (var c in cols)
@@ -27,17 +19,12 @@
                     }
                 </tr>
             </thead>
-            @{ var i = 0; }
             @foreach (var a in Model.Rows)
             {
                 var x = a.X; var t = x.T; var s = x.S;
-                var custPct = t.Paid / t.Grand * 100;
-                var advPct = a.Advanced / s.Payable * 100;
-                var l1State = a.L1 == "Approved" ? "done" : a.L1 == "Rejected" ? "bad" : "wait";
-                var l2State = a.L2 == "Approved" ? "done" : a.L2 == "-" ? "skip" : "wait";
                 <tbody>
-                    <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@x.Id">
-                        <td class="chev">@Html.Raw(Chevron)</td>
+                    <tr class="row">
+                        <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
                         <td>@Ui.Two(t.No, t.Mbk, "c-blue")</td>
                         <td>@Ui.LnHtml(Ui.Badge(t.Status))</td>
                         <td>@Ui.Two(t.PaxName, t.Pax + " pax")</td>
@@ -53,7 +40,7 @@
                         </td>
                         <td class="ta-r">@Ui.Ln(Fmt.Inr(a.Amount), "adv-amt")@Ui.Ln(a.RequestedOn, "fs95 c-mut mt3")</td>
                         <td>@Ui.Two(s.Ops, s.OpsBranch)</td>
-                        <td>@Approval("L1", a.L1, "Vijay Gupta", a.L1On)@Approval("L2", a.L2, a.L2By, a.L2On)</td>
+                        <td>@Ui.Ln(a.L1Mark.Text, a.L1Mark.Cls, a.L1Mark.Tip)@Ui.Ln(a.L2Mark.Text, a.L2Mark.Cls, a.L2Mark.Tip)</td>
                         <td class="w1 nowrap">
                             @if (a.Payment == "Paid")
                             {
@@ -70,13 +57,13 @@
                             }
                         </td>
                     </tr>
-                    <tr class="drill" hidden>
+                    <tr class="drill">
                         <td colspan="@cols.Length">
                             <div class="drill-in">
                                 <div class="sec" style="flex:1 1 260px">
                                     <div class="sec-t">Customer payment</div>
                                     <div class="bar">
-                                        <div class="track"><div class="fill" style="width:@(Fmt.Fixed1(Math.Clamp(custPct, 0, 100)))%"></div></div>
+                                        <div class="track"><div class="fill" style="width:@a.CustomerPaidWidth"></div></div>
                                         <div class="bar-l"><span>Paid @Fmt.Inr(t.Paid)</span><span>@(t.Balance > 0 ? "Due " + Fmt.Inr(t.Balance) : "Fully paid")</span></div>
                                     </div>
                                     <div class="facts">
@@ -89,7 +76,7 @@
                                 <div class="sec" style="flex:1.6 1 380px">
                                     <div class="sec-t">Service &amp; advance</div>
                                     <div class="bar">
-                                        <div class="track"><div class="fill" style="width:@(Fmt.Fixed1(Math.Clamp(advPct, 0, 100)))%"></div></div>
+                                        <div class="track"><div class="fill" style="width:@a.AdvancedWidth"></div></div>
                                         <div class="bar-l"><span>Advanced @Fmt.Inr(a.Advanced)</span><span>Payable @Fmt.Inr(s.Payable)</span></div>
                                     </div>
                                     <div class="facts c3">
@@ -104,27 +91,17 @@
                                 <div class="sec" style="flex:1 1 260px">
                                     <div class="sec-t">Approval trail</div>
                                     <div class="steps">
-                                        @{
-                                            var steps = new[]
-                                            {
-                                                ("L1 · Finance", a.L1 == "Approved" ? "Vijay Gupta · " + Fmt.Short(a.L1Date) + ", 14:05" : a.L1 == "Rejected" ? "Rejected" : "Awaiting approval", l1State),
-                                                ("L2 · Management", a.L2 == "Approved" ? a.L2By + " · " + Fmt.Short(a.L2Date) + ", 16:40" : a.L2 == "-" ? "Not reached" : "Awaiting approval", l2State),
-                                            };
-                                        }
-                                        @for (var si = 0; si < steps.Length; si++)
+                                        @foreach (var st in a.Steps)
                                         {
-                                            var (name, sub, state) = steps[si];
-                                            var (cls, glyph) = Step(state);
-                                            <div class="step @cls">
+                                            <div class="step @st.State">
                                                 <div class="rail">
-                                                    <span class="dot">@glyph</span>
-                                                    <span class="line @(si == steps.Length - 1 ? "last" : state == "done" ? "done" : "")"></span>
+                                                    <span class="dot">@st.Glyph</span>
+                                                    <span class="line @st.LineCls"></span>
                                                 </div>
-                                                <div class="body"><div class="name">@name</div><div class="sub">@sub</div></div>
+                                                <div class="body"><div class="name">@st.Name</div><div class="sub">@st.Sub</div></div>
                                             </div>
                                         }
-                                    </div>
-                                </div>
+                                    </div>                                </div>
                             </div>
                         </td>
                     </tr>

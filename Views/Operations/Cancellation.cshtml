@@ -16,19 +16,18 @@
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 
-<div class="results" data-frag="results">
+<div class="results">
     @if (Model.IsTicketView)
     {
         string[] cols = { "", "Ticket / MBK", "File No.", "Passenger / Pax", "Bk Exec / Branch", "Canx Txn No.", "Canx Date", "Days Left", "Canx Reason", "Total Canx Charge", "Refund / Reissue", "Cancel Profit / %" };
         <div class="card">
-            <table class="gt">
+            <table class="gt cards t-canx-ticket">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
-                @{ var i = 0; }
                 @foreach (var x in Model.Rows)
                 {
                     <tbody>
-                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@x.T.No">
-                            <td class="chev">@Html.Raw(Chevron)</td>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
                             <td>@Ui.Two(x.T.No, x.T.Mbk, "c-blue")</td>
                             <td>@Ui.FileNo(x.T.File, "fs105 c-mut")</td>
                             <td>@Ui.Two(x.T.PaxName, x.T.Pax + " pax", "fw4")</td>
@@ -39,9 +38,9 @@
                             <td>@Ui.Ln(x.Reason)</td>
                             <td class="ta-r">@Ui.Ln(Fmt.Inr(x.Total), "fw8 fs14 c-red")@Ui.Ln("incl. GST", "fs9 c-mut")</td>
                             <td>@Ui.LnHtml(Ui.Badge(x.Type))@Ui.Ln(x.RefundOrReissueAmount, "fs105 c-mut mt3")</td>
-                            <td class="ta-r">@Ui.Ln(Fmt.Inr(x.Profit), "fw7 " + ProfitCls(x.Profit))@Ui.Ln(Fmt.Fixed1(x.ProfitPct) + "%", "fs105 " + ProfitCls(x.Profit))</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(x.Profit), "fw7 " + ProfitCls(x.Profit))@Ui.Ln(x.ProfitPctText, "fs105 " + ProfitCls(x.Profit))</td>
                         </tr>
-                        <tr class="drill" hidden>
+                        <tr class="drill">
                             <td colspan="@cols.Length">
                                 <div class="drill-in">
                                     <div class="sec">
@@ -59,12 +58,12 @@
                                             <div><div class="fact-l">System Final Canx Charge</div><div class="fact-v c-red">@Fmt.Inr(x.BaseCharge)</div></div>
                                             <div><div class="fact-l">GST (5%)</div><div class="fact-v">@Fmt.Inr(x.Gst)</div></div>
                                             <div><div class="fact-l">Charge Basis</div><div class="fact-v">@(x.Override ? "Override applied" : "Policy rate")</div></div>
-                                            <div><div class="fact-l">File Profit / SP%</div><div class="fact-v c-teal">@Fmt.Inr(x.FileProfit) / @(Fmt.Fixed1(x.FileProfitPct))%</div></div>
+                                            <div><div class="fact-l">File Profit / SP%</div><div class="fact-v c-teal">@Fmt.Inr(x.FileProfit) / @x.FileProfitPctText</div></div>
                                         </div>
                                     </div>
                                     <div class="sec">
                                         <div class="sec-t">Vendor cancellation summary</div>
-                                        <table class="st">
+                                        <table class="st cards t-canx-ticket-v">
                                             <thead>
                                                 <tr>
                                                     <th>Vendor</th><th>Service</th><th>City</th><th class="ta-r">Total Payable</th>
@@ -103,30 +102,29 @@
     {
         string[] cols = { "", "Vendor Name / ID", "Service Type(s)", "Cities", "Canx Count", "Total Svc Duration", "Total Payable", "Advance Paid", "Final Payable", "Refund from Vendor" };
         <div class="card">
-            <table class="gt">
+            <table class="gt cards t-canx-vendor">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
-                @{ var i = 0; }
                 @foreach (var g in Model.VendorRows)
                 {
                     <tbody>
-                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@g.Id">
-                            <td class="chev">@Html.Raw(Chevron)</td>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
                             <td>@Ui.Ln(g.Name, "fw7")@Ui.Ln(g.Id)</td>
-                            <td>@foreach (var ty in g.Types) {@Ui.Ln(ty)}</td>
+                            <td>@Ui.Ln(string.Join(", ", g.Types))</td>
                             <td>@Ui.Ln(g.Cities)</td>
-                            <td>@Ui.LnHtml(Ui.Count(g.Tickets.Count()))</td>
+                            <td>@Ui.LnHtml(Ui.Count(g.TicketCount))</td>
                             <td>@Ui.Ln(g.TourDays + "d")</td>
                             <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable))</td>
                             <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Advance), "c-grn")</td>
                             <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Final), "fw7 c-blue")</td>
                             <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Refund), "fw8 c-grn")</td>
                         </tr>
-                        <tr class="drill" hidden>
+                        <tr class="drill">
                             <td colspan="@cols.Length">
                                 <div class="drill-in">
                                     <div class="sec">
                                         <div class="sec-t">Vendor cancellation details</div>
-                                        <table class="st">
+                                        <table class="st cards t-canx-vendor-d">
                                             <thead>
                                                 <tr>
                                                     <th>Ticket / MBK</th><th>File No.</th><th>Service</th><th>City</th><th>Svc Date</th><th>OPS User</th><th>OPS Status</th>
@@ -139,7 +137,6 @@
                                                 @foreach (var a in g.Items)
                                                 {
                                                     var x = a.X; var v = a.V;
-                                                    var fp = v.S.Sell - v.S.Payable;
                                                     <tr>
                                                         <td>@Ui.Two(x.T.No, x.T.Mbk, "c-blue")</td>
                                                         <td>@Ui.FileNo(x.T.File, "fs105 c-mut")</td>
@@ -154,8 +151,8 @@
                                                         <td class="ta-r">
                                                             @if (x.Override)
                                                             {
-                                                                @Ui.Ln(Fmt.Inr(Fmt.Round(v.S.Payable * (x.VendorPct - 10) / 100)), "c-amb fw7")
-                                                                @Ui.Ln(Math.Max(0, x.VendorPct - 10) + "%", "fs10 c-mut")
+                                                                @Ui.Ln(Fmt.Inr(a.OverrideAmount!.Value), "c-amb fw7")
+                                                                @Ui.Ln(a.OverridePctText, "fs10 c-mut")
                                                             }
                                                             else
                                                             {
@@ -175,7 +172,7 @@
                                                                 @Ui.Ln("-")
                                                             }
                                                         </td>
-                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(fp), "c-teal fw7")@Ui.Ln(Fmt.Fixed1(fp / v.S.Sell * 100) + "%", "fs10 c-mut")</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(a.FileProfit), "c-teal fw7")@Ui.Ln(a.FileProfitPct, "fs10 c-mut")</td>
                                                     </tr>
                                                 }
                                             </tbody>

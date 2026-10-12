@@ -2,7 +2,7 @@ using SouthernTravels.Insights.Infrastructure;
 
 namespace SouthernTravels.Insights.Reports;
 
-public sealed record DayInfo(int D, string Dow, bool Weekend, bool InRange);
+public sealed record DayInfo(int D, string Dow, bool Weekend);
 
 public readonly record struct Split(int N, int P, int C)
 {
@@ -13,21 +13,30 @@ public readonly record struct Split(int N, int P, int C)
 public sealed record WeekInfo(int Wi, List<DayInfo> Days)
 {
     public string Range => Days[0].D + "–" + Days[^1].D;
+    public string Label => "Week " + (Wi + 1) + " (" + Range + ")";
 }
 
-/// <summary>A calendar column: either a single day or a collapsed week.</summary>
-public sealed record CalUnit(DayInfo? Day, WeekInfo? Week)
+/// <summary>One clickable count in the summary table (New / In Progress / Completed) and the services behind it.</summary>
+public sealed record StatusCount(string Status, string Cls, int Count, List<ServiceRow> Services);
+
+/// <summary>A pre-computed % Complete figure with its pill tone.</summary>
+public sealed record PctCell(string Text, string Tone)
 {
-    public Split Get(Func<int, Split> get) =>
-        Day is not null ? get(Day.D) : Week!.Days.Aggregate(new Split(), (acc, d) => acc + get(d.D));
+    public static PctCell Of(int done, int total)
+    {
+        var p = total > 0 ? done / (double)total * 100 : 0;
+        return new PctCell(Fmt.Fixed1(p) + "%", p >= 45 ? "pp-hi" : p >= 43 ? "pp-mid" : "pp-lo");
+    }
 }
 
 public sealed class WorkUser
 {
     public required string Name { get; init; }
-    public required Dictionary<int, Split> Daily { get; init; }
-    public Split InRange { get; init; }
-    public double Pct => WorkloadMath.Pct(InRange.C, InRange.Total);
+    public Split Totals { get; init; }
+    public required PctCell Pct { get; init; }
+    public required List<StatusCount> Counts { get; init; }
+    /// <summary>Calendar cell per day, in column order.</summary>
+    public required List<Split> Cells { get; init; }
 }
 
 public sealed class WorkBranch
@@ -35,27 +44,23 @@ public sealed class WorkBranch
     public required string Name { get; init; }
     public required string Code { get; init; }
     public required List<WorkUser> Users { get; init; }
-    public Split Totals => Users.Aggregate(new Split(), (a, u) => a + u.InRange);
-    public double Pct => WorkloadMath.Pct(Totals.C, Totals.Total);
-    public Split Day(int d) => Users.Aggregate(new Split(), (a, u) => a + u.Daily[d]);
-}
-
-public static class WorkloadMath
-{
-    public static double Pct(int c, int t) => t > 0 ? c / (double)t * 100 : 0;
-
-    /// <summary>% Complete pill tone: ≥45 teal, ≥43 blue, otherwise slate.</summary>
-    public static string PctTone(double p) => p >= 45 ? "pp-hi" : p >= 43 ? "pp-mid" : "pp-lo";
+    public Split Totals { get; init; }
+    public required PctCell Pct { get; init; }
+    public required List<Split> Cells { get; init; }
 }
 
 public sealed class OpsUserWorkloadPage : ReportPage
 {
+    public const string RangeFrom = "2026-09-01", RangeTo = "2026-09-30";
+
     public List<WorkBranch> Branches { get; set; } = new();
     public Split GrandTotal { get; set; }
+    public PctCell GrandPct { get; set; } = new("", "");
     public List<WeekInfo> Weeks { get; set; } = new();
-    public List<CalUnit> Units { get; set; } = new();
-    /// <summary>Services behind each clickable count, keyed "user|status".</summary>
-    public Dictionary<string, List<ServiceRow>> Drill { get; set; } = new();
+    public List<DayInfo> Days { get; set; } = new();
+    public List<Split> GrandCells { get; set; } = new();
+    /// <summary>Calendar column count: user, status, one per day, total.</summary>
+    public int CalColumns { get; set; }
     public bool IsCalendar => ActiveTab == "calendar";
 }
 
@@ -83,47 +88,70 @@ public static class OpsUserWorkloadReport
             ActiveTab = ReportPage.ResolveTab(q, Tabs),
         };
 
-        var wf = Fmt.ParseIso(q.WFrom) ?? DateTime.MinValue;
-        var wt = Fmt.ParseIso(q.WTo) ?? DateTime.MaxValue;
+        // September 2026, every day shown.
         string[] dows = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
         var dl = Enumerable.Range(1, 30).Select(d =>
         {
-            var dt = new DateTime(2026, 9, d);
-            var w = (int)dt.DayOfWeek;
-            return new DayInfo(d, dows[w], w == 0 || w == 6, dt >= wf && dt <= wt);
+            var w = (int)new DateTime(2026, 9, d).DayOfWeek;
+            return new DayInfo(d, dows[w], w == 0 || w == 6);
         }).ToList();
+        page.Days = dl;
+        page.CalColumns = dl.Count + 3;
+        page.Weeks = dl.GroupBy(x => x.D / 7).Select(g => new WeekInfo(g.Key, g.ToList())).ToList();
 
-        page.Branches = Sample.Select((b, bi) => new WorkBranch
-        {
-            Name = b.Branch,
-            Code = b.Code,
-            Users = b.Users.Select((u, i) =>
-            {
-                var daily = Distribute(dl, u.Total, u.New, u.Done, i * 5 + bi * 3);
-                var inR = dl.Where(x => x.InRange).Aggregate(new Split(), (a, x) => a + daily[x.D]);
-                return new WorkUser { Name = u.Name, Daily = daily, InRange = inR };
-            }).ToList(),
-        }).ToList();
-        page.GrandTotal = page.Branches.Aggregate(new Split(), (a, b) => a + b.Totals);
-
-        // Calendar weeks (prototype groups by floor(day / 7)) and visible columns.
-        page.Weeks = dl.Where(x => x.InRange).GroupBy(x => x.D / 7).Select(g => new WeekInfo(g.Key, g.ToList())).ToList();
-        foreach (var wk in page.Weeks)
-        {
-            if (q.CollapsedWeeks.Contains(wk.Wi)) page.Units.Add(new CalUnit(null, wk));
-            else page.Units.AddRange(wk.Days.Select(d => new CalUnit(d, null)));
-        }
-
-        // Count drill-downs: services are assigned round-robin to each branch's OPS users.
+        // Services behind each clickable count: assigned round-robin to each branch's OPS users.
+        var drill = new Dictionary<string, List<ServiceRow>>();
         int di = 0, hi = 0;
         string[] del = { "Versha", "Ujjwal", "Gaurav" }, hyd = { "Chandu", "Jhansi", "Gopi" };
         foreach (var x in ServiceRow.All())
         {
             var user = x.S.OpsBranch == "DEL001" ? del[di++ % 3] : hyd[hi++ % 3];
             var key = user + "|" + x.S.OpsDisplay;
-            if (!page.Drill.TryGetValue(key, out var list)) page.Drill[key] = list = new List<ServiceRow>();
+            if (!drill.TryGetValue(key, out var list)) drill[key] = list = new List<ServiceRow>();
             list.Add(x);
         }
+        List<ServiceRow> Services(string user, string status) => drill.GetValueOrDefault(user + "|" + status) ?? new List<ServiceRow>();
+
+        var branches = new List<(string Name, string Code, List<(string Name, Dictionary<int, Split> Daily, Split Totals)> Users)>();
+        foreach (var (b, bi) in Sample.Select((b, bi) => (b, bi)))
+        {
+            var users = b.Users.Select((u, i) =>
+            {
+                var daily = Distribute(dl, u.Total, u.New, u.Done, i * 5 + bi * 3);
+                return (u.Name, daily, Totals: dl.Aggregate(new Split(), (a, x) => a + daily[x.D]));
+            }).ToList();
+            branches.Add((b.Branch, b.Code, users));
+        }
+
+        Split Sum(IEnumerable<Split> s) => s.Aggregate(new Split(), (a, x) => a + x);
+        page.Branches = branches.Select(b =>
+        {
+            var totals = Sum(b.Users.Select(u => u.Totals));
+            return new WorkBranch
+            {
+                Name = b.Name,
+                Code = b.Code,
+                Totals = totals,
+                Pct = PctCell.Of(totals.C, totals.Total),
+                Cells = dl.Select(x => Sum(b.Users.Select(u => u.Daily[x.D]))).ToList(),
+                Users = b.Users.Select(u => new WorkUser
+                {
+                    Name = u.Name,
+                    Totals = u.Totals,
+                    Pct = PctCell.Of(u.Totals.C, u.Totals.Total),
+                    Cells = dl.Select(x => u.Daily[x.D]).ToList(),
+                    Counts = new List<StatusCount>
+                    {
+                        new("New", "n", u.Totals.N, Services(u.Name, "New")),
+                        new("In Progress", "p", u.Totals.P, Services(u.Name, "In Progress")),
+                        new("Completed", "c", u.Totals.C, Services(u.Name, "Completed")),
+                    },
+                }).ToList(),
+            };
+        }).ToList();
+        page.GrandTotal = Sum(page.Branches.Select(b => b.Totals));
+        page.GrandPct = PctCell.Of(page.GrandTotal.C, page.GrandTotal.Total);
+        page.GrandCells = dl.Select((_, i) => Sum(page.Branches.Select(b => b.Cells[i]))).ToList();
         return page;
     }
 

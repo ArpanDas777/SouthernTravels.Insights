@@ -1,0 +1,111 @@
+@model WeeklySalesTrendPage
+@{
+    string[] dows = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+}
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results" style="flex:none">
+    <div class="wst">
+        <div class="wst-card">
+            @* Controls are visual only; the heatmap highlights net sales. *@
+            <div class="wst-ctl">
+                <span class="cap-strong">Period:</span>
+                <input type="date" aria-label="From" value="@Model.From" />
+                <span class="to">to</span>
+                <input type="date" aria-label="To" value="@Model.To" />
+                <span class="note">Showing sample data</span>
+                <span class="vrule"></span>
+                <span class="grp">
+                    <span class="cap-strong">Branch:</span>
+                    <select aria-label="Branch">
+                        <option value="">All branches</option>
+                        @foreach (var b in SalesSample.TrendBranches)
+                        {
+                            <option value="@b.Branch">@b.Branch</option>
+                        }
+                    </select>
+                </span>
+                <span class="grp">
+                    <span class="cap-strong">Ticket type:</span>
+                    <select aria-label="Ticket type">
+                        <option value="">All types</option>
+                        @foreach (var t in SalesSample.TicketTypes)
+                        {
+                            <option value="@t.Type">@t.Type</option>
+                        }
+                    </select>
+                </span>
+                <span class="spacer"></span>
+                <span class="grp">
+                    <span class="cap-strong">Highlight:</span>
+                    <span class="hl">
+                        <button type="button" class="on">Net sales</button>
+                        <button type="button">Gross sales</button>
+                        <button type="button">Cancellation</button>
+                    </span>
+                </span>
+            </div>
+
+            <div class="hm-dow">@foreach (var d in dows) {<span>@d</span>}</div>
+            @foreach (var w in Model.Weeks)
+            {
+                <div class="hm-week">
+                    @foreach (var x in w)
+                    {
+                        if (x is null)
+                        {
+                            <div class="hm-cell blank"></div>
+                            continue;
+                        }
+                        <div class="hm-cell @(x.Weekend ? "we" : "")" title="@x.Tip">
+                            <div class="hm-heat" style="background:@Model.HeatColor;opacity:@x.Heat.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)"></div>
+                            <div class="hm-in">
+                                <div class="hm-top"><span><span class="d-full">@WeeklySalesTrendPage.CellDate(x.D)</span><span class="d-short">@x.D.Day.ToString("D2")</span></span><span class="tr @(x.TrendUp ? "c-ok" : "c-dg")" title="Gross sales vs same weekday last week">@x.TrendText</span></div>
+                                @if (!x.Future)
+                                {
+                                    <div class="hm-rows">
+                                        <div class="hm-r"><span class="k">Gross sales</span><span class="v c-ok">@Fmt.Inr(x.Gross)</span></div>
+                                        <div class="hm-r"><span class="k">Cancellation</span><span class="v c-dg fw6">−@Fmt.Inr(x.Canx)</span></div>
+                                        <div class="hm-r net"><span class="k">Net sales</span><span class="v sel">@Fmt.Inr(x.Net)</span></div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            @if (Model.Days.Count == 0)
+            {
+                <div class="empty">No days in the selected range.</div>
+            }
+            <div class="hm-leg"><span>@Model.MetricLabel intensity</span><span>Low</span><span class="grad" style="background:linear-gradient(90deg,#fff,@Model.HeatColor)"></span><span>High</span></div>
+        </div>
+    </div>
+
+    <div class="lc-card">
+        <div class="lc-head">
+            <span class="t">Gross, cancellation and net sales</span><span class="spacer"></span>
+            @foreach (var s in Model.Series)
+            {
+                <span class="lc-key"><span class="ln-sw" style="background:@s.Color"></span>@s.Name</span>
+            }
+            <span class="lc-key"><span class="we-sw"></span>Weekend</span>
+        </div>
+        <div class="lc-plot">
+            @foreach (var k in Model.Ticks)
+            {
+                <div class="lc-tick" style="bottom:@k.Bottom"><span>@k.Label</span></div>
+            }
+            <div class="lc-cols">@foreach (var c in Model.Cols) {<div class="@(c.Weekend ? "we" : "")"></div>}</div>
+            <svg viewBox="0 0 1000 190" preserveAspectRatio="none">
+                @foreach (var s in Model.Series)
+                {
+                    <polyline points="@s.Points" fill="none" stroke="@s.Color" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+                }
+            </svg>
+            <div class="lc-cols lc-hover">@foreach (var c in Model.Cols) {<div title="@c.Tip"></div>}</div>
+        </div>
+        <div class="lc-x">@foreach (var c in Model.Cols) {<span>@c.Label</span>}</div>
+    </div>
+</div>

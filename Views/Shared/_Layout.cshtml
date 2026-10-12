@@ -4,20 +4,25 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@Model.Title · Southern Insights</title>
-    <script>try { if (localStorage.getItem('ops.navCollapsed') === '1') document.documentElement.classList.add('nav-collapsed'); } catch (e) { }</script>
+    <title>@Model.Title · Southern Travels Insights</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Public+Sans:wght@400;600;700&display=swap" />
     <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cards.css" asp-append-version="true" />
 </head>
 <body>
+@* Sidebar state is a CSS-only checkbox: collapses the rail on desktop, expands it on tablets, opens the slide-out menu on phones. *@
+<input type="checkbox" id="navtoggle" class="nav-chk" aria-hidden="true" tabindex="-1" />
 <div class="app" data-report="@Model.Id">
     <header class="topbar">
+        <label for="navtoggle" class="hamburger" aria-label="Open menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </label>
         <img class="logo" src="~/img/logo-southern.png" alt="Southern Travels" />
         <span class="vsep"></span>
-        <span class="dept">Southern Insights</span>
+        <span class="dept">Southern Travels&nbsp; Insights</span>
         <span class="spacer"></span>
         <label class="gsearch">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
@@ -27,38 +32,32 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>
             <span class="count">3</span>
         </button>
-        <button class="user" type="button">
-            <span class="avatar">@SampleData.MeInitials</span>
-            <span class="who"><b>@SampleData.Me</b><small>@SampleData.MeRole</small></span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-        </button>
     </header>
 
     <div class="shell">
         <aside class="sidebar">
-            <button class="toggle" type="button" data-action="toggle-nav" title="Collapse menu">
+            <label for="navtoggle" class="toggle" title="Collapse / expand menu">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16"></path><path class="chev-open" d="M16 10l-2 2 2 2"></path><path class="chev-closed" d="M14 10l2 2-2 2"></path></svg>
-            </button>
-            <div class="section"><span class="lbl-full">Operations</span><span class="lbl-short">OPS</span></div>
+            </label>
+            <div class="section"><span class="lbl-full">Reports</span><span class="lbl-short">REP</span></div>
             @foreach (var n in ReportPage.Nav)
             {
-                <a class="nav @(n.Id == Model.Id ? "active" : "")" title="@n.Label"
-                   href="@Url.Content("~/Operations/" + n.Action)">
+                <a class="nav @(n.Id == Model.Id ? "active" : "")" title="@n.Label" href="@Url.Content("~/Operations/" + n.Action)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="@n.Icon"></path></svg>
                     <span>@n.Label</span>
                 </a>
             }
+            <button class="nav-user" type="button" title="@SampleData.Me · @SampleData.MeRole">
+                <span class="avatar">@SampleData.MeInitials</span>
+                <span class="who"><b>@SampleData.Me</b><small>@SampleData.MeRole</small></span>
+            </button>
         </aside>
+        <label for="navtoggle" class="scrim" aria-label="Close menu"></label>
 
         <main class="main" id="main">
             @RenderBody()
         </main>
     </div>
 </div>
-
-<div class="menu" id="actions-menu" hidden></div>
-<div class="toast" id="toast" hidden></div>
-
-<script src="~/js/site.js" asp-append-version="true"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ using SouthernTravels.Insights.Models;
 
 namespace SouthernTravels.Insights.Reports;
 
-/// <summary>Filter sets and matching rules shared by several reports.</summary>
+/// <summary>Dropdown options for the (visual-only) filter panels.</summary>
 public static class CommonFilters
 {
     public static readonly string[] ServiceTypes = { "Accommodation", "Transport", "Guide", "En-Route Meals", "Other" };
@@ -29,29 +29,6 @@ public static class CommonFilters
     };
 
     public static readonly string[] TicketServiceDates = { "Booking Date", "Tour Start Date", "Service Start Date", "Confirmation Date" };
-
-    /// <summary>Ticket-level checks: Ticket Status, Booking Executive, Booking Branch, Booking Date, Tour Start Date.</summary>
-    public static bool TicketLevel(Ticket t, ReportQuery q) =>
-        ReportQuery.Match(q.F("Ticket Status"), t.Status)
-        && ReportQuery.Match(q.F("Booking Executive"), t.Exec)
-        && ReportQuery.Match(q.F("Booking Branch"), t.Branch)
-        && q.InRange("Booking Date", t.Booked)
-        && q.InRange("Tour Start Date", t.Start);
-
-    /// <summary>Service-level checks: OPS Status/User/Branch, Service Type/City/Status, Vendor, Service Start, Confirmation Date.</summary>
-    public static bool ServiceLevel(Service s, ReportQuery q)
-    {
-        var opsBranch = q.F("OPS Branch");
-        return ReportQuery.Match(q.F("OPS Status"), s.OpsDisplay)
-            && ReportQuery.Match(q.F("OPS User"), s.Ops)
-            && (opsBranch is null || opsBranch.Contains(s.OpsBranch))
-            && ReportQuery.Match(q.F("Service Type"), s.Type)
-            && ReportQuery.Match(q.F("Service City"), s.City)
-            && ReportQuery.Match(q.F("Service Status"), s.Status)
-            && ReportQuery.Match(q.F("Vendor Name"), SampleData.VendorName(s.VendorId))
-            && q.InRange("Service Start Date", s.Start)
-            && q.InRange("Confirmation Date", s.Conf);
-    }
 }
 
 /// <summary>A service paired with its ticket and derived pricing (the prototype's "SV" rows).</summary>

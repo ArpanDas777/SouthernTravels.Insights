@@ -54,6 +54,9 @@ public sealed record Ticket
     public required IReadOnlyList<Service> Services { get; init; }
 
     public double Balance => Grand - Paid;
+    /// <summary>Paid / balance as whole-number percentages of the grand total ("54%").</summary>
+    public string PaidPctText => Math.Round(Paid / Grand * 100, MidpointRounding.AwayFromZero) + "%";
+    public string DuePctText => Math.Round(Balance / Grand * 100, MidpointRounding.AwayFromZero) + "%";
 
     /// <summary>Overall ticket OPS status: all New → New, all Completed → Completed, otherwise In Progress.</summary>
     public string OverallOps =>

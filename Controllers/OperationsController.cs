@@ -20,5 +20,11 @@ public class OperationsController : Controller
 
     public IActionResult Advance() => View(AdvanceReport.Build(Q));
 
+    public IActionResult WeeklySalesTrend() => View(WeeklySalesTrendReport.Build(Q));
+
+    public IActionResult DailyEmpSales() => View(DailyEmpSalesReport.Build(Q));
+
+    public IActionResult SalesVsTarget() => View(SalesVsTargetReport.Build(Q));
+
     public IActionResult Error() => Problem();
 }

@@ -1,0 +1,43 @@
+@model SalesVsTargetPage
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    @* The one table allowed to scroll sideways on desktop: names stay pinned on the left. *@
+    <div class="card side-scroll">
+        <table class="gt cards t-r9" style="min-width:1220px">
+            <thead>
+                <tr class="weeks">
+                    <th class="lab"></th>
+                    <th colspan="5"><span class="wk-btn on">▾ @Model.DayLabel</span></th>
+                    <th colspan="3"><span class="wk-btn on">▾ @Model.MtdLabel</span></th>
+                    <th colspan="3"><span class="wk-btn on">▾ @Model.QtdLabel</span></th>
+                    <th colspan="3"><span class="wk-btn on">▾ @Model.YtdLabel</span></th>
+                </tr>
+                <tr>
+                    <th class="lab min84"><div class="l">Executive</div></th>
+                    <th><div class="l">Target</div></th><th><div class="l">Sales</div></th><th><div class="l">Cancellations</div></th><th><div class="l">Net sales</div></th><th><div class="l">Variation / Achieved</div></th>
+                    <th><div class="l">Actual</div></th><th><div class="l">Target</div></th><th><div class="l">Var / Achv</div></th>
+                    <th><div class="l">Actual</div></th><th><div class="l">Target</div></th><th><div class="l">Var / Achv</div></th>
+                    <th><div class="l">Actual</div></th><th><div class="l">Target</div></th><th><div class="l">Var / Achv</div></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    <tr class="row @r.Kind @(r.Kind == "gsum" ? "gtop" : "")">
+                        @SalesHtml.Lab(r.Name, null, r.Kind == "emp" ? "fw5 fs11" : r.Kind == "grp" ? "fw7 fs11 c-navy" : "fw8 fs11 c-navy", toggle: true)
+                        @SalesHtml.Sv(r.Target)@SalesHtml.Sv(r.Sales)@SalesHtml.Sv(r.Cancellations, "c-mut")@SalesHtml.Sv(r.Net, "fw7")@SalesHtml.VarAch(r.YVar)
+                        @SalesHtml.Sv(r.MAct, "fw7")@SalesHtml.Sv(r.MTgt)@SalesHtml.VarAch(r.MVar)
+                        @SalesHtml.Sv(r.QAct, "fw7")@SalesHtml.Sv(r.QTgt)@SalesHtml.VarAch(r.QVar)
+                        @SalesHtml.Sv(r.YAct, "fw7")@SalesHtml.Sv(r.YTgt)@SalesHtml.VarAch(r.YtdVar)
+                    </tr>
+                }
+                @if (Model.Rows.Count == 0)
+                {
+                    <tr><td colspan="15" class="empty">No executives found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

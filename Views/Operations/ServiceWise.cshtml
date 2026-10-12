@@ -1,4 +1,5 @@
 @model ServiceWisePage
+@using Microsoft.AspNetCore.Html
 @{
     const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
     string VarCls(double v) => v >= 0 ? "c-grn" : "c-red";
@@ -6,19 +7,80 @@
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 
-<div class="results" data-frag="results">
-    @if (Model.IsVendorView)
+<div class="results">
+    @if (Model.IsTrialBalance)
     {
-        string[] cols = { "", "MBK / Ticket", "Vendor ID", "Vendor Name", "Svc Start / End", "Days", "Service Type", "Service City", "Name of Service", "Category", "Meal Plan", "Conf. No." };
+        var tb = Model.Tb!;
+        if (!tb.HasLedger)
+        {
+            <div class="card"><div class="empty">Select a vendor, financial year and month range to view the ledger.</div></div>
+        }
+        else
+        {
+            IHtmlContent Amount(double v, string cls = "") => Ui.Ln(v != 0 ? tb.Money(v) : "-", v != 0 ? cls : "c-mut");
+            <div class="card">
+                <table class="gt ledger cards t-tb">
+                    <colgroup><col style="width:86px"><col style="width:64px"><col><col style="width:100px"><col style="width:100px"><col style="width:120px"></colgroup>
+                    <thead>
+                        <tr>
+                            <th><div class="l ta-l">Date</div></th>
+                            <th><div class="l ta-l">Type</div></th>
+                            <th><div class="l ta-l">Particular</div></th>
+                            <th><div class="l ta-r">Debit (Paid to vendor)</div></th>
+                            <th><div class="l ta-r">Credit (Invoiced)</div></th>
+                            <th><div class="l ta-r">Balance</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="row opening">
+                            <td class="nw">@Ui.Ln("Opening", "fw6")</td>
+                            <td></td>
+                            <td>@Ui.Ln("Opening balance (brought forward)", "fw6")</td>
+                            <td class="ta-r zero">@Ui.Ln("-", "c-mut")</td>
+                            <td class="ta-r zero">@Ui.Ln("-", "c-mut")</td>
+                            <td class="ta-r nw">@Ui.Ln(tb.Bal(tb.Opening), "fw7")</td>
+                        </tr>
+                        @foreach (var m in tb.MonthsList)
+                        {
+                            <tr class="banner mband"><td colspan="6">@m.Label</td></tr>
+                            foreach (var e in m.Entries)
+                            {
+                                <tr class="row">
+                                    <td class="nw">@Ui.Ln(Fmt.Date(e.Date))</td>
+                                    <td>@Ui.LnHtml(Ui.Badge(e.IsPayment ? "Paid" : "Invoice", "bdg-s"))</td>
+                                    <td>@Ui.Two(e.Line1, e.Line2, e.IsPayment ? "" : "c-blue")</td>
+                                    <td class="ta-r nw @(e.Debit == 0 ? "zero" : "")">@Amount(e.Debit, "c-grn")</td>
+                                    <td class="ta-r nw @(e.Credit == 0 ? "zero" : "")">@Amount(e.Credit)</td>
+                                    <td class="ta-r nw">@Ui.Ln(tb.Bal(e.Balance), "fw7")</td>
+                                </tr>
+                            }
+                        }
+                        @if (tb.EntryCount == 0)
+                        {
+                            <tr><td colspan="6" class="empty">No ledger activity for this vendor in the selected period.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="tb-bar" role="status">
+                <span class="tb-bar-l">Closing balance</span>
+                <span class="tb-bar-k">Debit<b>@tb.Money(tb.TotDebit)</b></span>
+                <span class="tb-bar-k">Credit<b>@tb.Money(tb.TotCredit)</b></span>
+                <span class="tb-bar-c @tb.ClosingCls">@tb.ClosingAmountText<small>@tb.ClosingNote</small></span>
+            </div>
+        }
+    }
+    else if (Model.IsVendorView)
+    {
+        string[] cols = { "", "MBK / Ticket", "Vendor ID", "Vendor Name", "Service Details", "Days", "Service Type", "Service City", "Name of Service", "Category", "Meal Plan", "Confirmation Details" };
         <div class="card">
-            <table class="gt">
+            <table class="gt cards t-sw-vendor">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
-                @{ var i = 0; }
                 @foreach (var x in Model.Rows)
                 {
                     <tbody>
-                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@x.Id">
-                            <td class="chev">@Html.Raw(Chevron)</td>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
                             <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
                             <td>@Ui.Ln(x.S.VendorId, "c-mut")</td>
                             <td>@Ui.Ln(x.VendorName, "fw7")</td>
@@ -29,9 +91,9 @@
                             <td>@Ui.Ln(x.S.Name, "fw6", x.S.Name)</td>
                             <td>@Ui.Ln(x.S.Category)</td>
                             <td>@Ui.Ln(x.S.Meal)</td>
-                            <td>@Ui.Ln(x.S.ConfNo, x.S.Conf is null ? "c-amb fw7" : "")</td>
+                            <td>@Ui.Two(x.S.ConfNo, x.S.Conf is null ? "Pending" : Fmt.Date(x.S.Conf.Value), x.S.Conf is null ? "c-amb fw7" : "")</td>
                         </tr>
-                        <tr class="drill" hidden>
+                        <tr class="drill">
                             <td colspan="@cols.Length">
                                 <div class="drill-in">
                                     <div class="sec">
@@ -68,14 +130,13 @@
     {
         string[] cols = { "", "Service City","Total Duration (days)", "Total Selling", "Total Contracted", "Total Negotiated", "Total Variation", "Total Vendors", "Total Pax" };
         <div class="card">
-            <table class="gt">
+            <table class="gt cards t-sw-city">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
-                @{ var i = 0; }
                 @foreach (var g in Model.Groups)
                 {
                     <tbody>
-                        <tr class="row expandable @(i++ % 2 == 1 ? "alt" : "")" data-key="@g.Key">
-                            <td class="chev">@Html.Raw(Chevron)</td>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
                             <td>@Ui.Two(g.Key, ServiceWisePage.StateOf.GetValueOrDefault(g.Key, ""), "c-navy fs13")</td>
                             <td>@Ui.Ln(g.Days + "d")</td>
                             <td>@Ui.Ln(Fmt.Inr(g.Sell), "fw7")</td>
@@ -85,12 +146,12 @@
                             <td>@Ui.LnHtml(Ui.Count(g.Vendors))</td>
                             <td>@Ui.Ln(g.Pax)</td>
                         </tr>
-                        <tr class="drill" hidden>
+                        <tr class="drill">
                             <td colspan="@cols.Length">
                                 <div class="drill-in">
                                     <div class="sec">
                                         <div class="sec-t">Services</div>
-                                        <table class="st">
+                                        <table class="st cards t-sw-city-d">
                                             <thead>
                                                 <tr>
                                                     <th>MBK / Ticket</th><th class="ta-c">Pax</th><th class="ta-r">Tour Price</th><th>Vendor</th>
