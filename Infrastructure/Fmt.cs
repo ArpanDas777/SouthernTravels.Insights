@@ -4,6 +4,8 @@ namespace SouthernTravels.Insights.Infrastructure;
 
 public static class Fmt
 {
+
+
     private static readonly string[] Mon = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
     /// <summary>JavaScript Math.round semantics (half rounds up).</summary>
