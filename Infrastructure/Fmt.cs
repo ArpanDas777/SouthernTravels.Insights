@@ -47,6 +47,4 @@ public static class Fmt
 
     public static string Iso(DateTime d) => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    public static DateTime? ParseIso(string? s) =>
-        DateTime.TryParseExact(s, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
 }

@@ -28,7 +28,36 @@ public sealed class AdvanceRequest
     public string L2On => Fmt.Date(L2Date) + ", 16:40";
     public string Due => Fmt.Date(X.S.Start.AddDays(-3));
     public string PaidOn => Fmt.Date(X.T.Booked.AddDays(9 + K));
+
+    // Display-ready values so the view only prints them.
+    public string CustomerPaidWidth => Fmt.Fixed1(Math.Clamp(X.T.Paid / X.T.Grand * 100, 0, 100)) + "%";
+    public string AdvancedWidth => Fmt.Fixed1(Math.Clamp(Advanced / X.S.Payable * 100, 0, 100)) + "%";
+    public ApprovalMark L1Mark => Mark("L1", L1, "Vijay Gupta", Fmt.Short(L1Date) + ", 14:05");
+    public ApprovalMark L2Mark => Mark("L2", L2, L2By, Fmt.Short(L2Date) + ", 16:40");
+
+    /// <summary>The L1 / L2 approval trail shown in the drill-down.</summary>
+    public IReadOnlyList<ApprovalStep> Steps => new[]
+    {
+        Step("L1 · Finance", L1 == "Approved" ? "Vijay Gupta · " + Fmt.Short(L1Date) + ", 14:05" : L1 == "Rejected" ? "Rejected" : "Awaiting approval",
+            L1 == "Approved" ? "done" : L1 == "Rejected" ? "bad" : "wait", last: false),
+        Step("L2 · Management", L2 == "Approved" ? L2By + " · " + Fmt.Short(L2Date) + ", 16:40" : L2 == "-" ? "Not reached" : "Awaiting approval",
+            L2 == "Approved" ? "done" : L2 == "-" ? "skip" : "wait", last: true),
+    };
+
+    // "L1 ✓" / "L2 !" / "L2 –"; an approved stage carries the approver and time as a native tooltip.
+    private static ApprovalMark Mark(string tag, string status, string by, string on) => status == "-"
+        ? new ApprovalMark(tag + "  –", "c-mut fs12 mt2", null)
+        : new ApprovalMark(tag + "  " + (status == "Approved" ? "✓" : "!"),
+            (status == "Approved" ? "c-grn" : status == "Rejected" ? "c-red" : "c-amb") + " fw8 fs13 mt2",
+            status + (status == "Approved" ? " · " + by + " · " + on : ""));
+
+    private static ApprovalStep Step(string name, string sub, string state, bool last) =>
+        new(name, sub, state, state switch { "done" => "✓", "skip" => "–", _ => "!" }, last ? "last" : state == "done" ? "done" : "");
 }
+
+public sealed record ApprovalMark(string Text, string Cls, string? Tip);
+
+public sealed record ApprovalStep(string Name, string Sub, string State, string Glyph, string LineCls);
 
 public sealed class AdvancePage : ReportPage
 {
@@ -57,14 +86,7 @@ public static class AdvanceReport
             DateFields = new[] { "Tour Start Date" },
         };
 
-        var f = Build()
-            .Where(x => q.OkPeriod(x.RequestedDate) && q.OkSearch(x.X.T.Mbk + " " + x.X.T.No + " " + x.X.T.PaxName + " " + x.X.VendorName + " " + x.X.S.Name))
-            .Where(x => ReportQuery.Match(q.F("Approval Status"), x.Overall)
-                        && ReportQuery.Match(q.F("Adv. Payment Status"), x.Payment)
-                        && ReportQuery.Match(q.F("OPS User"), x.X.S.Ops)
-                        && ReportQuery.Match(q.F("Service Type"), x.X.S.Type)
-                        && q.InRange("Tour Start Date", x.X.T.Start))
-            .ToList();
+        var f = Build();
 
         page.Kpis.AddRange(new[]
         {

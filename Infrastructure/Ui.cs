@@ -1,5 +1,6 @@
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
+using SouthernTravels.Insights.Models;
 
 namespace SouthernTravels.Insights.Infrastructure;
 
@@ -60,13 +61,12 @@ public static class Ui
         conf is null ? Ln("Pending", "c-amb fw7") : Ln(Fmt.Short(conf.Value));
 
     /// <summary>Grand / Paid / Balance stacked figures, with paid % and due %.</summary>
-    public static IHtmlContent GrandPaidBalance(double grand, double paid)
+    public static IHtmlContent GrandPaidBalance(Ticket t)
     {
-        var due = grand - paid;
         var b = new HtmlContentBuilder()
-            .AppendHtml(Ln(Fmt.Inr(grand), "fw7"))
-            .AppendHtml(Ln(Fmt.Inr(paid) + " paid · " + Fmt.Pct0(paid / grand * 100), "c-grn"));
-        return b.AppendHtml(due > 0 ? Ln(Fmt.Inr(due) + " due · " + Fmt.Pct0(due / grand * 100), "fw7 c-red") : Ln("Nil", "c-grn"));
+            .AppendHtml(Ln(Fmt.Inr(t.Grand), "fw7"))
+            .AppendHtml(Ln(Fmt.Inr(t.Paid) + " paid · " + t.PaidPctText, "c-grn"));
+        return b.AppendHtml(t.Balance > 0 ? Ln(Fmt.Inr(t.Balance) + " due · " + t.DuePctText, "fw7 c-red") : Ln("Nil · 0%", "c-grn"));
     }
 
     /// <summary>Drill-down Start / "to" / End / "{N}d" (DD/MM/YY).</summary>

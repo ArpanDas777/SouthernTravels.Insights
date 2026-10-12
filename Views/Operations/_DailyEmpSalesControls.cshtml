@@ -1,0 +1,15 @@
+@model DailyEmpSalesPage
+@* Period inputs (visual only). *@
+<span class="cap">Period</span>
+@if (Model.IsMonthView)
+{
+    <input type="month" aria-label="From month" value="@Model.MFrom" />
+    <span class="to">to</span>
+    <input type="month" aria-label="To month" value="@Model.MTo" />
+}
+else
+{
+    <input type="date" aria-label="From" value="@Model.EFrom" />
+    <span class="to">to</span>
+    <input type="date" aria-label="To" value="@Model.ETo" />
+}

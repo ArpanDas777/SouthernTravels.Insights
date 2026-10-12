@@ -47,12 +47,21 @@ public sealed class Cancellation
     public double FileProfit => T.Grand - VendorPayable;
     public double FileProfitPct => FileProfit / T.Grand * 100;
     public string RefundOrReissueAmount => Fmt.Inr(Type == "Refund" ? Refund : T.Grand);
+    public string ProfitPctText => Fmt.Fixed1(ProfitPct) + "%";
+    public string FileProfitPctText => Fmt.Fixed1(FileProfitPct) + "%";
 
     /// <summary>Days-left pill tone: ≤7 red, ≤14 yellow, otherwise teal.</summary>
     public string DaysLeftTone => DaysLeft <= 7 ? "dl-red" : DaysLeft <= 14 ? "dl-yellow" : "dl-teal";
 }
 
-public sealed record CanxVendorItem(Cancellation X, CanxService V);
+public sealed record CanxVendorItem(Cancellation X, CanxService V)
+{
+    /// <summary>Override charge on this service (null when the ticket has no override).</summary>
+    public double? OverrideAmount => X.Override ? Fmt.Round(V.S.Payable * (X.VendorPct - 10) / 100) : null;
+    public string OverridePctText => Math.Max(0, X.VendorPct - 10) + "%";
+    public double FileProfit => V.S.Sell - V.S.Payable;
+    public string FileProfitPct => Fmt.Fixed1(FileProfit / V.S.Sell * 100) + "%";
+}
 
 public sealed record CanxVendorGroup(string Id, List<CanxVendorItem> Items)
 {
@@ -61,6 +70,7 @@ public sealed record CanxVendorGroup(string Id, List<CanxVendorItem> Items)
     public IEnumerable<string> Types => Items.Select(a => a.V.S.Type).Distinct();
     public string Cities => string.Join(", ", Items.Select(a => a.V.S.City).Distinct());
     public int TourDays => Tickets.Sum(x => x.T.Days);
+    public int TicketCount => Tickets.Count();
     public double Payable => Items.Sum(a => a.V.S.Payable);
     public double Advance => Items.Sum(a => a.V.Advance);
     public double Final => Items.Sum(a => a.V.Final);
@@ -101,16 +111,7 @@ public static class CancellationReport
             DateFields = new[] { "Cancellation Date" },
         };
 
-        var all = Build();
-        var f = all
-            .Where(x => q.OkPeriod(x.CancelDate)
-                        && q.OkSearch(x.T.No + " " + x.T.Mbk + " " + x.T.PaxName + " " + x.T.File + " " + x.Txn + " " + string.Join(" ", x.Services.Select(v => v.VendorName))))
-            .Where(x => ReportQuery.Match(q.F("Booking Executive"), x.T.Exec)
-                        && ReportQuery.Match(q.F("Booking Branch"), x.T.Branch)
-                        && ReportQuery.Match(q.F("Canx Reason"), x.Reason)
-                        && ReportQuery.Match(q.F("Refund / Reissue"), x.Type)
-                        && q.InRange("Cancellation Date", x.CancelDate))
-            .ToList();
+        var f = Build();
 
         var sales = f.Sum(x => x.T.Grand);
         var collected = f.Sum(x => x.Total);

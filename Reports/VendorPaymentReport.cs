@@ -11,6 +11,7 @@ public sealed record PaymentVendorGroup(string Id, List<ServiceRow> Items)
     public string Cities => string.Join(", ", Items.Select(x => x.S.City).Distinct());
     public int Days => Items.Sum(x => x.S.Days);
     public int Pax => ServiceRow.PaxOf(Items);
+    public int ServiceCount => Items.Count;
     public double Payable => Items.Sum(x => x.S.Payable);
 }
 
@@ -43,8 +44,6 @@ public static class VendorPaymentReport
         new("Booking Branch", CommonFilters.Branches),
     };
 
-    private const string OverlapRange = "Service Date Range (overlap)";
-
     public static VendorPaymentPage Build(ReportQuery q)
     {
         var page = new VendorPaymentPage
@@ -58,27 +57,10 @@ public static class VendorPaymentReport
             Tabs = Tabs,
             ActiveTab = ReportPage.ResolveTab(q, Tabs),
             Filters = Filters,
-            DateFields = new[] { OverlapRange },
+            DateFields = new[] { "Service Date Range (overlap)" },
         };
 
-        bool ServiceOk(Service s) =>
-            ReportQuery.Match(q.F("Service Type"), s.Type)
-            && ReportQuery.Match(q.F("Service City"), s.City)
-            && ReportQuery.Match(q.F("Meal Plan"), s.Meal)
-            && ReportQuery.Match(q.F("OPS Status"), s.OpsDisplay)
-            && q.Overlaps(OverlapRange, s.Start, s.End);
-
-        // A ticket is kept when it passes the ticket-level filters and has at least one matching service;
-        // once kept, all of its services (within the Period) are listed.
-        var keep = SampleData.Tickets
-            .Where(t => q.OkSearch(t.No + " " + t.Mbk + " " + t.PaxName + " " + t.File + " " + string.Join(" ", t.Services.Select(s => SampleData.VendorName(s.VendorId)))))
-            .Where(t => ReportQuery.Match(q.F("Ticket Status"), t.Status)
-                        && ReportQuery.Match(q.F("Booking Executive"), t.Exec)
-                        && ReportQuery.Match(q.F("Booking Branch"), t.Branch)
-                        && t.Services.Any(ServiceOk))
-            .Select(t => t.No)
-            .ToHashSet();
-        var f = ServiceRow.All().Where(x => keep.Contains(x.T.No) && q.OkPeriod(x.S.Start)).ToList();
+        var f = ServiceRow.All();
 
         if (page.IsVendorView)
         {

@@ -4,8 +4,14 @@ using SouthernTravels.Insights.Models;
 
 namespace SouthernTravels.Insights.Reports;
 
-public sealed record TicketRow(Ticket T, bool Mine, int Stripe)
+public sealed record TicketRow(Ticket T, bool Mine)
 {
+    /// <summary>OPS branches involved, e.g. "DEL001 / HYD001".</summary>
+    public string OpsBranches => string.Join(" / ", T.Services.Select(s => s.OpsBranch).Distinct());
+    public bool HasBalance => T.Balance > 0;
+    public string BalancePct => Fmt.Pct0(T.Balance / T.Grand * 100);
+    public string PaidPct => Fmt.Pct0(T.Paid / T.Grand * 100);
+
     public int DaysLeft => (int)Fmt.Round((T.Start - SampleData.Today).TotalDays);
 
     public string DaysLeftText => DaysLeft < 0 ? "Departed" : DaysLeft == 0 ? "Departs today" : DaysLeft + (DaysLeft == 1 ? " day left" : " days left");
@@ -14,7 +20,12 @@ public sealed record TicketRow(Ticket T, bool Mine, int Stripe)
     public string DaysLeftTone => DaysLeft >= 0 && DaysLeft <= 7 ? "soon" : DaysLeft < 0 ? "past" : "later";
 }
 
-public sealed record VendorItem(Ticket T, Service S);
+public sealed record VendorItem(Ticket T, Service S)
+{
+    public double Profit => S.Sell - S.Payable;
+    /// <summary>Profit as a percentage of the selling rate ("12.5%").</summary>
+    public string ProfitPct => Fmt.Fixed1(Profit / S.Sell * 100) + "%";
+}
 
 public sealed record VendorGroup(string Id, string Name, List<VendorItem> Items)
 {
@@ -25,11 +36,15 @@ public sealed record VendorGroup(string Id, string Name, List<VendorItem> Items)
     public double Payable => Items.Sum(x => x.S.Payable);
     public double Balance => Items.Sum(x => x.S.VendorBalance);
     public bool Active => Items.Any(x => x.S.Status != "Cancelled");
+    public bool HasBalance => Balance > 0;
 }
 
 public sealed class TicketServiceStatusPage : ReportPage
 {
     public bool IsTicketView => ActiveTab == "ticket";
+    /// <summary>Plain link that toggles the "mine only" / "all files" list.</summary>
+    public string ShowAllHref => Query.ShowAll ? "?tab=" + ActiveTab : "?tab=" + ActiveTab + "&all=1";
+    public string ShowAllLabel => Query.ShowAll ? "Show mine only" : "Show all";
     public List<TicketRow> TicketRows { get; set; } = new();
     public List<VendorGroup> VendorRows { get; set; } = new();
 }
@@ -57,9 +72,6 @@ public static class TicketServiceStatusReport
 
         var me = SampleData.Me;
         var tk = SampleData.Tickets
-            .Where(t => q.OkSearch(t.No) || q.OkSearch(t.Mbk) || q.OkSearch(t.File) || q.OkSearch(t.PaxName))
-            .Where(t => CommonFilters.TicketLevel(t, q) && q.OkPeriod(t.Booked))
-            .Where(t => t.Services.Any(s => CommonFilters.ServiceLevel(s, q)))
             .Where(t => q.ShowAll || t.IsAssignedTo(me))
             .OrderBy(t => t.IsAssignedTo(me) ? 0 : 1).ThenBy(t => t.Start)
             .ToList();
@@ -75,13 +87,13 @@ public static class TicketServiceStatusReport
 
         if (page.IsTicketView)
         {
-            var rows = tk.Select((t, i) => new TicketRow(t, t.IsAssignedTo(me), i)).ToList();
+            var rows = tk.Select(t => new TicketRow(t, t.IsAssignedTo(me))).ToList();
             (page.TicketRows, page.Pager) = Pager.Paginate(rows, q.Page);
             page.ResultLabel = tk.Count + " tickets";
         }
         else
         {
-            var groups = tk.SelectMany(t => t.Services.Where(s => CommonFilters.ServiceLevel(s, q)).Select(s => new VendorItem(t, s)))
+            var groups = tk.SelectMany(t => t.Services.Select(s => new VendorItem(t, s)))
                 .GroupBy(x => x.S.VendorId)
                 .OrderBy(g => g.Key, StringComparer.Ordinal)
                 .Select(g => new VendorGroup(g.Key, SampleData.VendorName(g.Key), g.ToList()))

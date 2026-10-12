@@ -1,0 +1,12 @@
+@model DailyEmpSalesPage
+@* Comparison tab controls (visual only): view switch and the Base years selector. *@
+<span class="seg">
+    <button type="button" class="on">Period to date</button>
+    <button type="button">Month-on-month</button>
+</span>
+<div class="ms">
+    <button type="button" class="ms-btn">
+        <span class="ms-cap">Base years</span><span>@Model.BaseYearLabel</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+    </button>
+</div>
