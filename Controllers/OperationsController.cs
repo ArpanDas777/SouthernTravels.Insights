@@ -26,5 +26,17 @@ public class OperationsController : Controller
 
     public IActionResult SalesVsTarget() => View(SalesVsTargetReport.Build(Q));
 
+    public IActionResult DutySlip() => View(DutySlipReport.Build(Q));
+
+    public IActionResult Tcs() => View(TcsReport.Build(Q));
+
+    public IActionResult Gst() => View(GstReport.Build(Q));
+
+    public IActionResult Tds() => View(TdsReport.Build(Q));
+
+    public IActionResult CashSheetAudit() => View(CashSheetAuditReport.Build(Q));
+
+    public IActionResult BalancePending() => View(BalancePendingReport.Build(Q));
+
     public IActionResult Error() => Problem();
 }

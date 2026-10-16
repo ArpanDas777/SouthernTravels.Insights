@@ -21,6 +21,7 @@
     {
         string[] cols = { "", "Ticket / MBK", "File No.", "Passenger / Pax", "Bk Exec / Branch", "Canx Txn No.", "Canx Date", "Days Left", "Canx Reason", "Total Canx Charge", "Refund / Reissue", "Cancel Profit / %" };
         <div class="card">
+                @AlignCss.For("t-canx-ticket", cols)
             <table class="gt cards t-canx-ticket">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
                 @foreach (var x in Model.Rows)
@@ -102,6 +103,7 @@
     {
         string[] cols = { "", "Vendor Name / ID", "Service Type(s)", "Cities", "Canx Count", "Total Svc Duration", "Total Payable", "Advance Paid", "Final Payable", "Refund from Vendor" };
         <div class="card">
+                @AlignCss.For("t-canx-vendor", cols)
             <table class="gt cards t-canx-vendor">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
                 @foreach (var g in Model.VendorRows)

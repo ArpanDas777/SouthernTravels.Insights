@@ -1,3 +1,4 @@
+using SouthernTravels.Insights.Infrastructure;
 using System.Globalization;
 using SouthernTravels.Insights.Models;
 
@@ -31,6 +32,9 @@ public static class SampleData
     };
 
     public static readonly IReadOnlyList<Ticket> Tickets = Build();
+
+    /// <summary>Generated ticket numbers: GRP / SPL followed by four digits.</summary>
+    private static string Tkn(int n) => (n % 2 == 1 ? "GRP" : "SPL") + (1000 + n * 73 % 8000);
 
     public static string VendorName(string id) => Vendors.TryGetValue(id, out var v) ? v.Name : id;
 
@@ -96,7 +100,7 @@ public static class SampleData
             var n = 4 + i * 3;
             t.Add(b with
             {
-                No = "TKT-26-" + (610 + i),
+                No = Tkn(610 + i),
                 Mbk = "MBK-" + (88700 + i),
                 File = "FN/" + (8 + i).ToString("D6") + "/2026-27/" + (i % 2 == 1 ? "HYD001" : "DEL001"),
                 PaxName = names[i],
@@ -115,7 +119,7 @@ public static class SampleData
             var n = 30 + k * 9;
             t.Add(b with
             {
-                No = "TKT-26-" + (630 + k),
+                No = Tkn(630 + k),
                 Mbk = "MBK-" + (88740 + k),
                 File = "FN/" + (20 + k).ToString("D6") + "/2026-27/DEL001",
                 PaxName = cancelledNames[k],
@@ -129,6 +133,36 @@ public static class SampleData
                     Start = x.Start.AddDays(n), End = x.End.AddDays(n),
                 }).ToList(),
             });
+        }
+
+        // 21 confirmed tickets (three per vendor V101–V107) so every vendor has dated activity around today.
+        string[] vendorPax = { "Sanjay Kulkarni", "Fatima Sheikh", "Rajiv Menon", "Isha Agarwal", "Manoj Pillai", "Zoya Khan", "Harsh Vora", "Naina Kapoor", "Alok Dubey", "Revathi Iyer", "Bhavna Shah", "Yash Chopra", "Tanya Bose", "Omkar Patil", "Sana Mirza", "Kunal Arora", "Deepti Rao", "Vinay Hegde", "Sheetal Jain", "Arvind Nambiar", "Pallavi Sen" };
+        int[] baseTicket = { 0, 1, 2, 3, 5 };
+        var c = 0;
+        for (var vi = 0; vi < 7; vi++)
+        {
+            var vid = "V10" + (vi + 1);
+            var tpl = t.SelectMany(x => x.Services).First(x => x.VendorId == vid);
+            for (var k = 0; k < 3; k++)
+            {
+                var b = t[baseTicket[(vi + k) % 5]];
+                var n = -25 + k * 24 + vi * 4;
+                var f = 0.8 + k * 0.2;
+                var payable = Fmt.Round(tpl.Payable * f / 100) * 100;
+                t.Add(b with
+                {
+                    No = Tkn(650 + c),
+                    Mbk = "MBK-" + (88800 + c),
+                    File = "FN/" + (30 + c).ToString("D6") + "/2026-27/" + ((vi + k) % 2 == 1 ? "HYD001" : "DEL001"),
+                    PaxName = vendorPax[c % vendorPax.Length],
+                    Status = "Confirmed",
+                    Booked = b.Booked.AddDays(n - 10),
+                    Start = b.Start.AddDays(n),
+                    End = b.End.AddDays(n),
+                    Services = new[] { tpl with { Status = "Confirmed", Start = tpl.Start.AddDays(n), End = tpl.End.AddDays(n), Sell = Fmt.Round(tpl.Sell * f / 100) * 100, Payable = payable, VendorBalance = k == 1 ? payable : 0 } },
+                });
+                c++;
+            }
         }
 
         // Only GRP9012 stays assigned to the logged-in user; everything else moves to Karan Shah.

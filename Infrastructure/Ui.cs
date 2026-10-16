@@ -12,8 +12,9 @@ public static class Ui
     /// <summary>Status badge tone (ticket / service / OPS / approval / payment statuses).</summary>
     public static string Tone(string status) => status switch
     {
-        "Confirmed" or "Approved" or "Paid" or "Refund" or "Active" => "tone-ok",
-        "Pending" => "tone-warn",
+        "Confirmed" or "Approved" or "Paid" or "Refund" or "Active" or "Generated" => "tone-ok",
+        "Cancel" => "tone-cancel",
+        "Pending" or "Not generated" => "tone-warn",
         "Cancelled" or "Rejected" => "tone-danger",
         "In Progress" or "Requested" or "Reissue" => "tone-info",
         "Completed" => "tone-done",
@@ -76,4 +77,10 @@ public static class Ui
             .AppendHtml(Ln("to", "fs9 c-mut"))
             .AppendHtml(Ln(Fmt.Short(end)))
             .AppendHtml(Ln(days + "d", "fw7"));
+
+    /// <summary>Compact Start – End on one line with the duration below.</summary>
+    public static IHtmlContent StartEndCompact(DateTime start, DateTime end, int days) =>
+        new HtmlContentBuilder()
+            .AppendHtml(Ln(Fmt.Short(start) + " – " + Fmt.Short(end), "nowrap"))
+            .AppendHtml(Ln(days + "d", "fs10 c-mut"));
 }

@@ -18,6 +18,10 @@ public sealed record SalesDay(DateTime D, double Gross, double Canx, double Net,
     /// <summary>Hover text for the heatmap cell.</summary>
     public string Tip => WeeklySalesTrendPage.DayNames[(int)D.DayOfWeek] + " " + WeeklySalesTrendPage.Dmy(D) + " · " + (Future ? "No data yet" : WeeklySalesTrendPage.Wow(Net, PrevNet) + " vs same day last week");
 }
+/// <summary>One day in the Table view; amounts and the week-on-week change are display-ready.</summary>
+public sealed record WeekDayRow(string Date, string Day, bool Weekend, bool Future, string Gross, string Canx, string Net, string Wow, bool WowUp);
+/// <summary>One Monday–Sunday week of the Table view, with its totals and days (the current week is open).</summary>
+public sealed record WeekRow(string Label, string Gross, string Canx, string Net, string Wow, bool WowUp, bool Open, List<WeekDayRow> Days);
 public sealed record ChartTick(string Bottom, string Label);
 public sealed record ChartSeries(string Name, string Color, string Points);
 public sealed record ChartCol(bool Weekend, string Label, string Tip);
@@ -33,6 +37,10 @@ public sealed class WeeklySalesTrendPage : ReportPage
     public string? Type { get; init; }
     /// <summary>Highlighted metric: net / gross / canx.</summary>
     public string Metric { get; init; } = "net";
+    /// <summary>Selected view: calendar, line or table (the "tab" link value).</summary>
+    public string View { get; init; } = "calendar";
+    public static readonly (string Key, string Label)[] Views = { ("calendar", "Calendar"), ("line", "Line"), ("table", "Table") };
+    public List<WeekRow> WeekRows { get; set; } = new();
     public List<SalesDay> Days { get; set; } = new();
     /// <summary>Monday–Sunday weeks of the selected range.</summary>
     public List<List<SalesDay?>> Weeks { get; set; } = new();
@@ -70,6 +78,7 @@ public static class WeeklySalesTrendReport
             KpiValueSize = 13,
             From = "2026-10-01",
             To = "2026-10-31",
+            View = new[] { "calendar", "line", "table" }.Contains(q.Tab) ? q.Tab! : "calendar",
         };
 
         var raw = new List<SalesDay>();
@@ -88,6 +97,22 @@ public static class WeeklySalesTrendReport
         // Monday–Sunday weeks, seven slots each (null where the week starts / ends mid-week).
         page.Weeks = days.GroupBy(x => x.D.AddDays(-(((int)x.D.DayOfWeek + 6) % 7)))
             .Select(w => Enumerable.Range(0, 7).Select(k => w.FirstOrDefault(y => ((int)y.D.DayOfWeek + 6) % 7 == k)).ToList()).ToList();
+        // Table view: Monday–Sunday weeks with totals; the week containing the sample "today" opens by default.
+        var today = new DateTime(2026, 10, 5);
+        foreach (var w in days.GroupBy(x => x.D.AddDays(-(((int)x.D.DayOfWeek + 6) % 7))).OrderBy(g => g.Key))
+        {
+            var done = w.Where(x => !x.Future).ToList();
+            double wg = done.Sum(x => x.Gross), wc = done.Sum(x => x.Canx), wn = done.Sum(x => x.Net), wp = done.Sum(x => x.PrevNet);
+            var first = w.Min(x => x.D);
+            var last = w.Max(x => x.D);
+            page.WeekRows.Add(new WeekRow(
+                Fmt.Date(first) + " – " + Fmt.Date(last),
+                done.Count > 0 ? Fmt.Inr(wg) : "-", done.Count > 0 ? "−" + Fmt.Inr(wc) : "-", done.Count > 0 ? Fmt.Inr(wn) : "-",
+                done.Count > 0 ? WeeklySalesTrendPage.Wow(wn, wp) : "–", wn >= wp, today >= w.Key && today <= w.Key.AddDays(6),
+                w.OrderBy(x => x.D).Select(x => new WeekDayRow(Fmt.Date(x.D), WeeklySalesTrendPage.DayNames[(int)x.D.DayOfWeek], x.Weekend, x.Future,
+                    x.Future ? "-" : Fmt.Inr(x.Gross), x.Future ? "-" : "−" + Fmt.Inr(x.Canx), x.Future ? "-" : Fmt.Inr(x.Net),
+                    x.Future ? "–" : WeeklySalesTrendPage.Wow(x.Net, x.PrevNet), x.Net >= x.PrevNet)).ToList()));
+        }
         // KPIs
         double tg = days.Sum(x => x.Gross), tc = days.Sum(x => x.Canx), tn = days.Sum(x => x.Net);
         var best = days.OrderByDescending(x => x.Net).FirstOrDefault();

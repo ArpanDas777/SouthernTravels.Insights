@@ -1,0 +1,10 @@
+@model SouthernTravels.Insights.Reports.TaxFoot
+@* Totals bar under the table (all filtered rows, not just the current page). Styled in taxreports.css. *@
+<div class="tx-foot" role="status">
+    <span class="tx-foot-l">@Model.Label</span>
+    @foreach (var i in Model.Items)
+    {
+        <span class="tx-foot-k">@i.Label <b>@i.Value</b></span>
+    }
+    <span class="tx-foot-t"><span class="tx-foot-tl">@Model.TotalLabel</span><b>@Model.Total</b></span>
+</div>

@@ -59,6 +59,7 @@ public static class TicketServiceStatusReport
         var page = new TicketServiceStatusPage
         {
             Id = "r1",
+            StickyHeader = true,
             Title = "Ticket & Service Status",
             Description = "Ticket & Service Status — an employee-wise view of every ticket and its linked services. Covers OPS Activity (what's New, In Progress, or Completed per OPS user), Pending Follow-up Identification (tickets needing immediate attention), Service Completion Tracking (a closed-loop log of everything marked Completed), Branch-wise OPS Performance (activity grouped by OPS Branch), and Overall OPS Status Visibility across the board.",
             Query = q,

@@ -13,6 +13,7 @@
     </div>
 }
 
+<div class="@(Model.StickyHeader ? "sticky-bar" : "fc")">
 @if (Model.Tabs.Count > 0)
 {
     <div class="tabs @(Model.CompactTabs ? "compact" : "")">
@@ -26,7 +27,7 @@
 @if (Model.HasToolbar)
 {
     <input type="checkbox" id="filtertoggle" class="filter-chk" aria-hidden="true" tabindex="-1" />
-    <div class="toolbar @(Model.Tabs.Count > 0 ? "has-tabs" : "")">
+    <div class="toolbar @(Model.Tabs.Count > 0 ? "has-tabs" : "") @Model.ToolbarClass">
         <label class="search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
             <input placeholder="@Model.SearchPlaceholder" />
@@ -35,9 +36,12 @@
         {
             <partial name="@Model.ToolbarExtra" model="Model" />
         }
+        @if (Model.HasFilters)
+        {
         <label for="filtertoggle" class="tb-btn" role="button" tabindex="0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg><span class="tb-lbl">Filters</span>
         </label>
+        }
         <span class="count">@Model.ResultLabel</span>
         <span class="spacer"></span>
         @if (Model.HasExport)
@@ -53,6 +57,8 @@
         }
     </div>
 
+    @if (Model.HasFilters)
+    {
     <div class="filters" id="filter-panel">
         <div class="sheet-head"><b>Filters</b><label for="filtertoggle" class="sheet-x" aria-label="Close filters">✕</label></div>
         <div class="filters-head">
@@ -85,4 +91,6 @@
         </div>
         <div class="sheet-foot"><button type="button" class="btn-clear">Clear filters</button><label for="filtertoggle" class="sheet-done">Done</label></div>
     </div>
+    }
 }
+</div>

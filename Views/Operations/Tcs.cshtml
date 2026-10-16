@@ -1,0 +1,99 @@
+﻿@model TcsPage
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+    string[] cols = { "", "Ticket Details", "Ticket Status", "Passenger Information", "Booking Executive", "Journey / Completion", "Base / Discount / GST", "TCS on Ticket", "Grand Total", "TCS Actual / Diff.", "Final TCS", "Remark" };
+}
+@CardCss.For("t-tcs", cols, title: 2, lead: 1)
+@AlignCss.For("t-tcs", cols)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    <div class="card">
+        <table class="gt dense cards t-tcs tx-t tx-w980">
+            <thead>
+                <tr>
+                    @foreach (var c in cols)
+                    {
+                        <th><div class="l">@c</div></th>
+                    }
+                </tr>
+            </thead>
+            @foreach (var r in Model.Rows)
+            {
+                var t = r.T;
+                <tbody>
+                    <tr class="row @r.Tint">
+                        @if (r.HasPrev)
+                        {
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                        }
+                        else
+                        {
+                            <td class="chev"></td>
+                        }
+                        <td class="ta-l nowrap">@Ui.Ln(t.No, "c-blue fw7")@Ui.Ln(r.Booked, "fs10 c-mut", "Date of booking")</td>
+                        <td class="ta-c nowrap">
+                            @Ui.LnHtml(Ui.Badge(r.Status, "tx-bdg"))
+                            @if (t.Canx is { } cx)
+                            {
+                                @Ui.Ln(TaxData.Sd(cx), "fs10 c-red fw6 mt3")
+                            }
+                        </td>
+                        <td class="ta-l">@Ui.Ln(t.Name, "fw6")@Ui.Ln(t.Pan, "fs10 c-mut")</td>
+                        <td class="ta-l">@Ui.Two(t.Exec, t.Branch)</td>
+                        <td class="ta-c nowrap">@Ui.Ln(r.Journey, "", "Journey date")@Ui.Ln(r.Completion, "fs10 c-mut", "Completion date")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(t.Base), "fw6")@Ui.Ln(r.DiscountText, "fs10 " + (t.Disc > 0 ? "c-red" : "c-mut"))@Ui.Ln(r.GstText, "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(t.OnTicket), "tx-chip blue", r.TicketTip)@Ui.Ln(r.TicketPct, "fs10 c-mut", r.TicketTip)</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(t.Grand), "fw7")</td>
+                        <td class="ta-r nowrap">
+                            @Ui.Ln(Fmt.Inr(t.Actual), "fw6", r.ActualTip)
+                            @Ui.Ln(r.ActualPct, "fs10 c-mut", r.ActualTip)
+                            @Ui.Ln(r.DiffText, t.Diff != 0 ? "fs10 c-red fw7" : "fs10 c-mut", r.DiffTip)
+                        </td>
+                        <td class="ta-r nowrap">
+                            @Ui.Ln(Fmt.Inr(t.Final), "tx-chip ok", r.FinalTip)
+                            @if (r.HasPrev)
+                            {
+                                @Ui.Ln("after prev. ticket", "fs9 c-mut", r.FinalTip)
+                            }
+                        </td>
+                        <td class="ta-l tx-remark">@Ui.Ln(t.Remark.Length > 0 ? t.Remark : "–", t.Remark.Length > 0 ? "fs11 c-amb fw6" : "fs11 c-mut")</td>
+                    </tr>
+                    @if (t.Prev is { } p)
+                    {
+                        <tr class="drill">
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec" style="flex:1 1 520px">
+                                        <div class="sec-t">Previous ticket adjustment</div>
+                                        <div class="facts c3">
+                                            <div><div class="fact-l">Previous ticket</div><div class="fact-v c-blue">@p.No</div></div>
+                                            <div><div class="fact-l">Previous DOB</div><div class="fact-v">@Fmt.Short(p.Dob)</div></div>
+                                            <div><div class="fact-l">Previous cancellation Dt</div><div class="fact-v">@Fmt.Short(p.Canx)</div></div>
+                                            <div><div class="fact-l">TCS collected on previous</div><div class="fact-v">@Fmt.Inr(p.Tcs)</div></div>
+                                            <div><div class="fact-l">TCS as per rate (this ticket)</div><div class="fact-v">@Fmt.Inr(t.Actual)</div></div>
+                                            <div><div class="fact-l">Final TCS (rate − previous)</div><div class="fact-v c-navy">@Fmt.Inr(t.Final)</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            }
+            @if (Model.Rows.Count == 0)
+            {
+                <tbody><tr><td colspan="@cols.Length" class="empty">No TCS records for this period.</td></tr></tbody>
+            }
+        </table>
+    </div>
+    @if (Model.Foot is not null)
+    {
+        <partial name="_TaxFoot" model="Model.Foot" />
+    }
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

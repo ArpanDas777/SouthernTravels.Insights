@@ -1,22 +1,20 @@
 @model ReportPage
-@* Shared Period selector (visual only) + title with the "i" description tooltip (CSS hover / focus) and any report-specific title controls. *@
-@if (Model.ShowPeriod)
-{
-    <div class="period">
-        <span class="cap">Period</span>
-        <select aria-label="Period">
-            @foreach (var o in ReportPage.PeriodOptions)
-            {
-                <option value="@o">@o</option>
-            }
-        </select>
-    </div>
-}
+@* Title with the "i" description tooltip (CSS hover / focus). The Period selector (visual only) and any report-specific controls sit at the right of the title row. *@
 <div class="title-row">
     <h2>@Model.Title</h2>
     <button type="button" class="info-btn" aria-label="About this report">i</button>
     <div class="desc-pop" role="tooltip">@Model.Description</div>
     <div class="title-ctl">
+        @if (Model.ShowPeriod)
+        {
+            <span class="cap">Period</span>
+            <select aria-label="Period">
+                @foreach (var o in ReportPage.PeriodOptions)
+                {
+                    <option value="@o" selected="@(o == Model.DefaultPeriod)">@o</option>
+                }
+            </select>
+        }
         @if (Model.TitleControls is not null)
         {
             <partial name="@Model.TitleControls" model="Model" />

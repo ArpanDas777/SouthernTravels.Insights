@@ -80,6 +80,7 @@ public static class OpsUserWorkloadReport
         var page = new OpsUserWorkloadPage
         {
             Id = "r2",
+            TitleControls = "_OpsWorkloadPeriod",
             Title = "OPS User Workload",
             Description = "OPS User Workload — a day-by-day breakdown of service counts and statuses assigned to each OPS user and branch. Tracks total services per user alongside a status-wise split, helping supervisors monitor daily throughput, flag overloaded users, and maintain workload balance across branches.",
             Query = q,
