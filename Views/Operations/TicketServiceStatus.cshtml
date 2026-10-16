@@ -17,6 +17,7 @@
     @if (Model.IsTicketView)
     {
         <div class="card">
+                @AlignCss.For("t-tss-ticket", ticketCols, (11, "right"))
             <table class="tt cards t-tss-ticket">
                 <thead>
                     <tr>
@@ -131,6 +132,7 @@
     else
     {
         <div class="card">
+                @AlignCss.For("t-tss-vendor", cols)
             <table class="gt cards t-tss-vendor">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
                 @foreach (var g in Model.VendorRows)

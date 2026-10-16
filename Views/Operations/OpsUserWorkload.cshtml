@@ -1,13 +1,6 @@
 @model OpsUserWorkloadPage
 @{
 }
-<div class="period">
-    <span class="cap-strong">Period:</span>
-    <input type="date" aria-label="From" value="@OpsUserWorkloadPage.RangeFrom" />
-    <span class="to">to</span>
-    <input type="date" aria-label="To" value="@OpsUserWorkloadPage.RangeTo" />
-    <span class="note">Showing sample data for Sep 2026</span>
-</div>
 <partial name="_ReportHeader" model="Model" />
 
 <div class="frag">
@@ -41,14 +34,14 @@
                         <th><div class="l">In Progress</div></th><th><div class="l">Completed</div></th><th><div class="l">% Complete</div></th>
                     </tr>
                 </thead>
-                @foreach (var b in Model.Branches)
+                @foreach (var (b, bi) in Model.Branches.Select((b, i) => (b, i)))
                 {
                     <tbody>
-                        <tr class="banner"><td colspan="6">▾ @b.Name Operating Branch</td></tr>
+                        <tr class="banner"><td colspan="6"><label class="bn-l"><input type="checkbox" class="bnx bnx-@bi" aria-label="Collapse @b.Name" />@b.Name Operating Branch</label></td></tr>
                     </tbody>
                     foreach (var u in b.Users)
                     {
-                        <tbody>
+                        <tbody class="br-@bi">
                             <tr class="row">
                                 <td>@Ui.Ln(u.Name, "fw5")</td>
                                 <td class="ta-c">@Ui.Ln(u.Totals.Total, "fw7 fs14")</td>
@@ -144,7 +137,7 @@
                 @foreach (var b in Model.Branches)
                 {
                     <tbody>
-                        <tr class="banner"><td colspan="@Model.CalColumns">▾ @b.Name Operating Branch</td></tr>
+                        <tr class="banner"><td colspan="@Model.CalColumns"><label class="bn-l"><input type="checkbox" class="bnx" aria-label="Collapse @b.Name" />@b.Name Operating Branch</label></td></tr>
                         @foreach (var usr in b.Users)
                         {
                             <tr class="row">

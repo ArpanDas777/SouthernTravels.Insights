@@ -54,7 +54,7 @@
         </aside>
         <label for="navtoggle" class="scrim" aria-label="Close menu"></label>
 
-        <main class="main" id="main">
+        <main class="main @(Model.StickyHeader ? "page-scroll" : "")" id="main">
             @RenderBody()
         </main>
     </div>

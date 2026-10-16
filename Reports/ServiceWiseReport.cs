@@ -46,7 +46,9 @@ public static class ServiceWiseReport
             Tabs = Tabs,
             ActiveTab = tab,
             ToolbarExtra = tab == "tb" ? "_TrialBalanceControls" : null,
+            ToolbarClass = tab == "tb" ? "one-line" : "",
             HasExpand = tab != "tb",
+            HasFilters = tab != "tb",
             Filters = CommonFilters.TicketService,
             DateFields = CommonFilters.TicketServiceDates,
         };
@@ -67,11 +69,11 @@ public static class ServiceWiseReport
 
         if (page.IsTrialBalance)
         {
-            var tb = page.Tb = TrialBalance.Build();
+            var tb = page.Tb = TrialBalance.Build(q.Vendor);
             page.ResultLabel = "";
             if (tb.VendorId is not null)
             {
-                page.Kpis.Add(new Kpi("Vendor", SampleData.VendorName(tb.VendorId), Sub: tb.VendorId));
+                page.Kpis.Add(new Kpi("Vendor", tb.VendorName, Sub: tb.VendorId));
                 page.Kpis.Add(new Kpi("Period", tb.Period, Sub: tb.Fy));
                 page.Kpis.Add(new Kpi("Currency", tb.Currency, Big: true));
                 // Closing balance and the ledger read from the same running totals.

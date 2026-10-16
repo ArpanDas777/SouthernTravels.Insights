@@ -3,6 +3,7 @@
 @{
     const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
     string VarCls(double v) => v >= 0 ? "c-grn" : "c-red";
+    string[] dcols = { "Ticket", "Pax", "Tour Price", "Vendor", "Service Type / City", "Name of Service", "Category / Meal Plan", "Conf No.", "Start / End", "Sell / Con / Neg", "Variation" };
 }
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
@@ -33,12 +34,12 @@
                     </thead>
                     <tbody>
                         <tr class="row opening">
-                            <td class="nw">@Ui.Ln("Opening", "fw6")</td>
+                            <td class="nw">@Ui.Ln(tb.OpeningDate, "c-mut")</td>
                             <td></td>
-                            <td>@Ui.Ln("Opening balance (brought forward)", "fw6")</td>
+                            <td>@Ui.Ln("Opening balance as on " + tb.OpeningDate, "fw6")</td>
                             <td class="ta-r zero">@Ui.Ln("-", "c-mut")</td>
                             <td class="ta-r zero">@Ui.Ln("-", "c-mut")</td>
-                            <td class="ta-r nw">@Ui.Ln(tb.Bal(tb.Opening), "fw7")</td>
+                            <td class="ta-r nw">@(tb.Opening == 0 ? Ui.Ln("-", "c-mut") : Ui.Ln(tb.Bal(tb.Opening), "fw7"))</td>
                         </tr>
                         @foreach (var m in tb.MonthsList)
                         {
@@ -47,8 +48,8 @@
                             {
                                 <tr class="row">
                                     <td class="nw">@Ui.Ln(Fmt.Date(e.Date))</td>
-                                    <td>@Ui.LnHtml(Ui.Badge(e.IsPayment ? "Paid" : "Invoice", "bdg-s"))</td>
-                                    <td>@Ui.Two(e.Line1, e.Line2, e.IsPayment ? "" : "c-blue")</td>
+                                    <td>@Ui.LnHtml(Ui.Badge(e.Kind.ToString(), "bdg-s"))</td>
+                                    <td>@Ui.Ln(e.Line1, "fw6 fs11 " + (e.Kind == LedgerKind.Invoice ? "c-blue" : e.Kind == LedgerKind.Cancel ? "c-red" : ""))@Ui.Ln(e.Line2, "fs10 c-mut")@foreach (var tk in e.Tickets) {@Ui.Ln(tk, "fs10 c-blue")}</td>
                                     <td class="ta-r nw @(e.Debit == 0 ? "zero" : "")">@Amount(e.Debit, "c-grn")</td>
                                     <td class="ta-r nw @(e.Credit == 0 ? "zero" : "")">@Amount(e.Credit)</td>
                                     <td class="ta-r nw">@Ui.Ln(tb.Bal(e.Balance), "fw7")</td>
@@ -72,8 +73,10 @@
     }
     else if (Model.IsVendorView)
     {
-        string[] cols = { "", "MBK / Ticket", "Vendor ID", "Vendor Name", "Service Details", "Days", "Service Type", "Service City", "Name of Service", "Category", "Meal Plan", "Confirmation Details" };
+        string[] cols = { "", "Ticket / File", "Vendor", "Name of Service", "Service Details", "Days", "Service Type / City", "Category / Meal Plan", "Confirmation Details" };
         <div class="card">
+                @AlignCss.For("t-sw-vendor", cols)
+                @CardCss.For("t-sw-vendor", cols, title: 2, lead: 1, extras: new[] { 5, 6, 8, 9 })
             <table class="gt cards t-sw-vendor">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
                 @foreach (var x in Model.Rows)
@@ -81,16 +84,13 @@
                     <tbody>
                         <tr class="row">
                             <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
-                            <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
-                            <td>@Ui.Ln(x.S.VendorId, "c-mut")</td>
-                            <td>@Ui.Ln(x.VendorName, "fw7")</td>
+                            <td>@Ui.Ln(x.T.No, "fw7 fs13 c-blue")@Ui.Ln(x.T.Mbk, "fs10 c-mut")@Ui.FileNo(x.T.File, "fs10 c-mut")</td>
+                            <td>@Ui.Ln(x.VendorName, "fw7")@Ui.Ln(x.S.VendorId, "fs10 c-mut")</td>
+                            <td>@Ui.Ln(x.S.Name, "fw6", x.S.Name)</td>
                             <td>@Ui.Ln(Fmt.Date(x.S.Start))@Ui.Ln("to", "fs9 c-mut")@Ui.Ln(Fmt.Date(x.S.End))</td>
                             <td class="ta-c">@Ui.Ln(x.S.Days + "d")</td>
-                            <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
-                            <td>@Ui.Ln(x.S.City)</td>
-                            <td>@Ui.Ln(x.S.Name, "fw6", x.S.Name)</td>
-                            <td>@Ui.Ln(x.S.Category)</td>
-                            <td>@Ui.Ln(x.S.Meal)</td>
+                            <td>@Ui.LnHtml(Ui.Pill(x.S.Type))@Ui.Ln(x.S.City, "fs10 c-mut mt2")</td>
+                            <td>@Ui.Ln(x.S.Category)@Ui.Ln(x.S.Meal, "fs10 c-mut")</td>
                             <td>@Ui.Two(x.S.ConfNo, x.S.Conf is null ? "Pending" : Fmt.Date(x.S.Conf.Value), x.S.Conf is null ? "c-amb fw7" : "")</td>
                         </tr>
                         <tr class="drill">
@@ -130,6 +130,7 @@
     {
         string[] cols = { "", "Service City","Total Duration (days)", "Total Selling", "Total Contracted", "Total Negotiated", "Total Variation", "Total Vendors", "Total Pax" };
         <div class="card">
+                @AlignCss.For("t-sw-city", cols)
             <table class="gt cards t-sw-city">
                 <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
                 @foreach (var g in Model.Groups)
@@ -151,39 +152,39 @@
                                 <div class="drill-in">
                                     <div class="sec">
                                         <div class="sec-t">Services</div>
+                                        @CardCss.For("t-sw-city-d", dcols, title: 1)
                                         <table class="st cards t-sw-city-d">
                                             <thead>
                                                 <tr>
-                                                    <th>MBK / Ticket</th><th class="ta-c">Pax</th><th class="ta-r">Tour Price</th><th>Vendor</th>
-                                                    <th>Svc Type</th>
-                                                    <th>City</th><th>Name of Service</th><th>Category</th><th>Meal Plan</th><th>Conf No.</th>
-                                                    <th>Start / End</th><th class="ta-r">Sell / Con / Neg</th><th class="ta-r">Variation</th>
+                                                    @foreach (var c in dcols) {<th>@c</th>}
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach (var x in g.Items)
                                                 {
                                                     <tr>
-                                                        <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
+                                                        <td>@Ui.Ln(x.T.No, "fw7 fs13 c-blue")@Ui.Ln(x.T.Mbk, "fs10 c-mut")</td>
                                                         <td class="ta-c">@Ui.Ln(x.T.Pax, "fw7")</td>
                                                         <td class="ta-r">
-                                                            @Ui.Ln(Fmt.Inr(x.BaseMargin), "fw7")@Ui.Ln("base + margin", "fs9 c-mut")
-                                                            @if (x.Discount > 0) {@Ui.Ln("−" + Fmt.Inr(x.Discount), "c-red fs105")}
-                                                            @Ui.Ln("+" + Fmt.Inr(x.Gst) + " GST", "fs105 c-mut")
-                                                            @Ui.Ln(Fmt.Inr(x.T.Grand), "fw7 mt3 fs12")@Ui.Ln("grand total", "fs9 c-mut")
+                                                            <div class="kv">
+                                                                <span class="k">Base + margin</span><span class="v fw7">@Fmt.Inr(x.BaseMargin)</span>
+                                                                @if (x.Discount > 0) {<span class="k">Discount</span><span class="v c-red">−@Fmt.Inr(x.Discount)</span>}
+                                                                <span class="k">GST</span><span class="v">+@Fmt.Inr(x.Gst)</span>
+                                                                <span class="k">Grand total</span><span class="v fw7">@Fmt.Inr(x.T.Grand)</span>
+                                                            </div>
                                                         </td>
-                                                        <td>@Ui.Two(x.S.VendorId, x.VendorName)</td>
-                                                        <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
-                                                        <td>@Ui.Ln(x.S.City)</td>
+                                                        <td>@Ui.Ln(x.VendorName, "fw6")@Ui.Ln(x.S.VendorId, "fs10 c-mut")</td>
+                                                        <td>@Ui.LnHtml(Ui.Pill(x.S.Type))@Ui.Ln(x.S.City, "fs10 c-mut mt2")</td>
                                                         <td>@Ui.Ln(x.S.Name, "fw6")</td>
-                                                        <td>@Ui.Ln(x.S.Category)</td>
-                                                        <td>@Ui.Ln(x.S.Meal)</td>
+                                                        <td>@Ui.Ln(x.S.Category)@Ui.Ln(x.S.Meal, "fs10 c-mut")</td>
                                                         <td>@Ui.Ln(x.S.ConfNo, x.S.Conf is null ? "c-amb fw7" : "")</td>
                                                         <td>@Ui.StartEnd(x.S.Start, x.S.End, x.S.Days)</td>
                                                         <td class="ta-r">
-                                                            @Ui.Ln(Fmt.Inr(x.S.Sell), "fw7")@Ui.Ln("sell", "fs9 c-mut")
-                                                            @Ui.Ln(Fmt.Inr(x.Contracted), "c-mut")@Ui.Ln("contracted", "fs9 c-mut")
-                                                            @Ui.Ln(Fmt.Inr(x.Negotiated), "c-blue")@Ui.Ln("negotiated", "fs9 c-mut")
+                                                            <div class="kv">
+                                                                <span class="k">Sell</span><span class="v fw7">@Fmt.Inr(x.S.Sell)</span>
+                                                                <span class="k">Contracted</span><span class="v c-mut">@Fmt.Inr(x.Contracted)</span>
+                                                                <span class="k">Negotiated</span><span class="v c-blue">@Fmt.Inr(x.Negotiated)</span>
+                                                            </div>
                                                         </td>
                                                         <td class="ta-r">@Ui.Ln(Fmt.Signed(x.Variation), "fw7 " + VarCls(x.Variation))</td>
                                                     </tr>

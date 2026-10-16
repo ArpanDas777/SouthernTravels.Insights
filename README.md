@@ -1,6 +1,6 @@
 # Southern Travels Insights — Operations reports
 
-ASP.NET Core MVC (.NET 8) implementation of the "Ticket & Service Status" design handoff, covering all nine Operations reports.
+ASP.NET Core MVC (.NET 8) implementation of the "Ticket & Service Status" design handoff, covering all fifteen Operations reports.
 
 ## Run
 
@@ -21,6 +21,12 @@ Open http://localhost:5080 (defaults to Ticket & Service Status).
 | Weekly Sales trend | `/Operations/WeeklySalesTrend` | `Views/Operations/WeeklySalesTrend.cshtml` |
 | Daily EMP Sales | `/Operations/DailyEmpSales` | `Views/Operations/DailyEmpSales.cshtml` |
 | Sales vs Target | `/Operations/SalesVsTarget` | `Views/Operations/SalesVsTarget.cshtml` |
+| Duty Slip Report | `/Operations/DutySlip` | `Views/Operations/DutySlip.cshtml` |
+| TCS Report | `/Operations/Tcs` | `Views/Operations/Tcs.cshtml` |
+| GST Report | `/Operations/Gst` | `Views/Operations/Gst.cshtml` |
+| TDS Report | `/Operations/Tds` | `Views/Operations/Tds.cshtml` |
+| Cash Sheet Audit Report | `/Operations/CashSheetAudit` | `Views/Operations/CashSheetAudit.cshtml` |
+| Balance Pending Report | `/Operations/BalancePending` | `Views/Operations/BalancePending.cshtml` |
 
 Service wise Report also has a **Trial Balance** tab (`?tab=tb`, controls in `_TrialBalanceControls.cshtml`).
 Sales figures for the three sales reports come from `Data/SalesSample.cs` (seeded sample generator, matches the prototype).
@@ -95,3 +101,27 @@ Shared views: `Views/Shared/_Layout.cshtml` (header + sidebar), `_ReportHeader.c
 - Everything shows the existing sample data in its default state; no script runs in the browser.
 - Not reachable by design: week / quarter column expand, month-on-month comparison, metric highlight switch, group collapse, calendar picker, vendor picker, and any search / filter / Period effect.
 - Trial Balance shows one fixed sample vendor ledger (Taj Falaknuma Palace, FY 2026-27, Apr–Oct); its controls are visual only.
+
+## Handoff of 15 Oct 2026 applied
+
+- Six new reports (r10–r15), built from the prototype's sample data; KPIs and footers match the prototype exactly. They are UI-only like the rest.
+- Cash Sheet Audit: the Matrix / Rows / Detail switch and the Cash Sheet / Cash Ledger tabs are links (`?tab=`); picking a sheet or a branch uses CSS-only radios (first one selected). Amount pop-ups and modals are not built.
+- Sample data: generated tickets use GRP / SPL numbers, and three confirmed tickets per vendor V101–V107 were added (80 services in all).
+- The Period selector sits in the title row (with "Last 5 Days"); the tax, duty-slip and balance reports preselect "This Month", Cash Sheet Audit "Last 5 Days".
+- Column alignment follows the prototype's header rule (`AlignCss` in `Infrastructure/CardCss.cs`): status centred, money right, names left, dates / counts centred.
+- Trial Balance: Period preset, Financial year, range chip, Service type and Vendor controls; ledger has Invoice, Paid (weekly, listing its tickets) and Cancel entries. The Filters button is hidden on this tab and on Cash Sheet Audit.
+- New nav icons, a scrolling rail, a narrower chevron column and scroll-capped drill-down tables.
+
+## Weekly changes doc applied
+
+- Weekly Sales trend now has three views as links (`?tab=calendar` default, `line`, `table`). Table lists Monday–Sunday weeks with totals; each week opens with a CSS-only checkbox and the current week starts open.
+- The rest of the doc was already in the app, or is interactive behaviour (pop-ups, Approve, Send payment link, multi-select dropdowns) that UI-only mode leaves out. Ticket-Wise keeps its OPS Status and Service columns (the 15 Oct prototype has them; the doc's list lags it).
+
+## Round of 16 Oct 2026 (feedback list)
+
+- Side menu: an icon rail on every report, opening over the page on hover or focus (CSS only); the toggle pins it open.
+- Ticket & Service Status: the page scrolls, KPI cards scroll away, tabs and toolbar stay pinned (`StickyHeader`).
+- Service wise: Vendor Wise and the City-wise services table use combined cells (ticket / MBK / file, vendor + id, type + city, category + meal plan); Tour Price and Sell / Con / Neg are `.kv` label-value grids. Trial Balance has centred headers, a one-line toolbar, a CSS vendor list (`?tab=tb&vendor=V1xx`) and five more ledger-only vendors (V108–V112, `TrialBalance.Vendors`).
+- OPS User Workload: Period sits in the title row, branch banners collapse their users (the subtotal stays), calendar header offsets and pinned columns fixed.
+- Vendor Payment: vendor drill-down and ticket-wise tables merged as requested; Start / End is compact on the ticket drill-down.
+- Card labels for the restructured tables now come from `CardCss.For` in the views (their old rules were removed from `cards.css`).

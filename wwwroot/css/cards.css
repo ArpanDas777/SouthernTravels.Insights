@@ -58,17 +58,6 @@
   .t-wl-drill > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Name of Service"; }
   .t-wl-drill > tbody > tr:not(.drill):not(.banner) > td:nth-child(5):not([colspan])::before { content: "Type"; }
   .t-wl-drill > tbody > tr:not(.drill):not(.banner) > td:nth-child(6):not([colspan])::before { content: "City"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "MBK / Ticket"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "Vendor ID"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Vendor Name"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(5):not([colspan])::before { content: "Service Details"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(6):not([colspan])::before { content: "Days"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(7):not([colspan])::before { content: "Service Type"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(8):not([colspan])::before { content: "Service City"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(9):not([colspan])::before { content: "Name of Service"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(10):not([colspan])::before { content: "Category"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(11):not([colspan])::before { content: "Meal Plan"; }
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(12):not([colspan])::before { content: "Confirmation Details"; }
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "Service City"; }
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "Total Duration (days)"; }
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Total Selling"; }
@@ -77,19 +66,6 @@
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(7):not([colspan])::before { content: "Total Variation"; }
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(8):not([colspan])::before { content: "Total Vendors"; }
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(9):not([colspan])::before { content: "Total Pax"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before { content: "MBK / Ticket"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "Pax"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "Tour Price"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Vendor"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(5):not([colspan])::before { content: "Svc Type"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(6):not([colspan])::before { content: "City"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(7):not([colspan])::before { content: "Name of Service"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(8):not([colspan])::before { content: "Category"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(9):not([colspan])::before { content: "Meal Plan"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(10):not([colspan])::before { content: "Conf No."; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(11):not([colspan])::before { content: "Start / End"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(12):not([colspan])::before { content: "Sell / Con / Neg"; }
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(13):not([colspan])::before { content: "Variation"; }
   .t-tb > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before { content: "Date"; }
   .t-tb > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "Type"; }
   .t-tb > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "Particular"; }
@@ -104,50 +80,6 @@
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(7):not([colspan])::before { content: "Total Duration"; }
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(8):not([colspan])::before { content: "Total Pax"; }
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(9):not([colspan])::before { content: "Total Business"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before { content: "MBK / Ticket"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "File No."; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "Passenger / Pax"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Booking / Branch"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(5):not([colspan])::before { content: "Grand / Paid / Balance"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(6):not([colspan])::before { content: "Ticket Status"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(7):not([colspan])::before { content: "OPS User / Branch"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(8):not([colspan])::before { content: "OPS Status"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(9):not([colspan])::before { content: "Tour Start / Dur."; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(10):not([colspan])::before { content: "Svc Type"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(11):not([colspan])::before { content: "City"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(12):not([colspan])::before { content: "Name of Service"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(13):not([colspan])::before { content: "No. / Category"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(14):not([colspan])::before { content: "Meal Plan"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(15):not([colspan])::before { content: "Conf. Date / No."; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(16):not([colspan])::before { content: "Start / End"; }
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(17):not([colspan])::before { content: "Vendor Payable"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "Ticket / MBK"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "File No."; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Passenger"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(5):not([colspan])::before { content: "Pax"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(6):not([colspan])::before { content: "Booking Exec / Branch"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(7):not([colspan])::before { content: "Grand Total"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(8):not([colspan])::before { content: "Paid"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(9):not([colspan])::before { content: "Balance"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(10):not([colspan])::before { content: "Ticket Status"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(11):not([colspan])::before { content: "OPS User / Branch"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(12):not([colspan])::before { content: "OPS Status"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(13):not([colspan])::before { content: "Tour Start"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(14):not([colspan])::before { content: "Tour Days"; }
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(15):not([colspan])::before { content: "Total Business"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before { content: "Vendor"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "Svc Type"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "City"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Name of Service"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(5):not([colspan])::before { content: "No./Rooms"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(6):not([colspan])::before { content: "Category"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(7):not([colspan])::before { content: "Meal Plan"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(8):not([colspan])::before { content: "Conf. Date"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(9):not([colspan])::before { content: "Conf. No."; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(10):not([colspan])::before { content: "OPS User"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(11):not([colspan])::before { content: "OPS Status"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(12):not([colspan])::before { content: "Start / End"; }
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(13):not([colspan])::before { content: "Vendor Payable"; }
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before { content: "Ticket / MBK"; }
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(3):not([colspan])::before { content: "File No."; }
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(4):not([colspan])::before { content: "Passenger / Pax"; }
@@ -235,7 +167,6 @@
   .t-r9 > tbody > tr:not(.drill):not(.banner) > td:nth-child(13):not([colspan])::before { content: "YTD Â· Actual"; }
   .t-r9 > tbody > tr:not(.drill):not(.banner) > td:nth-child(14):not([colspan])::before { content: "YTD Â· Target"; }
   .t-r9 > tbody > tr:not(.drill):not(.banner) > td:nth-child(15):not([colspan])::before { content: "YTD Â· Var / Achv"; }
-
   /* title cell */
   .t-tss-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]),
   .t-tss-svc > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
@@ -243,14 +174,9 @@
   .t-tss-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-wl-sum > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-wl-drill > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]),
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]),
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-tb > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]),
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]),
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]),
   .t-canx-ticket-v > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-canx-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]),
@@ -265,14 +191,9 @@
   .t-tss-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-wl-sum > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-wl-drill > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before,
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before,
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-tb > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before,
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before,
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before,
   .t-canx-ticket-v > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-canx-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan])::before,
@@ -287,14 +208,9 @@
   .t-tss-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
   .t-wl-sum > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
   .t-wl-drill > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) > div,
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) > div,
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
   .t-tb > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) > div,
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) > div,
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) > div,
   .t-canx-ticket-v > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) > div,
   .t-canx-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) > div,
@@ -309,14 +225,9 @@
   .t-tss-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-wl-sum > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-wl-drill > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) .ln,
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) .ln,
-  .t-sw-city-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-tb > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) .ln,
-  .t-vp-vendor-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) .ln,
-  .t-vp-ticket-d > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) .ln,
   .t-canx-ticket-v > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-canx-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(2):not([colspan]) .ln,
@@ -325,27 +236,21 @@
   .t-emp-day > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-emp-month > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln,
   .t-r9 > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) .ln { text-align: left; }
-
   /* chevron / lead cell: top-right of the card */
   .t-tss-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-tss-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-canx-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]),
   .t-adv > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan]) { position: absolute !important; top: 10px; right: 10px; display: block !important; width: auto !important; padding: 0 !important; }
   .t-tss-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-tss-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
-  .t-sw-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-sw-city > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-vp-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
-  .t-vp-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-canx-ticket > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-canx-vendor > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before,
   .t-adv > tbody > tr:not(.drill):not(.banner) > td:nth-child(1):not([colspan])::before { display: none !important; }
-
   /* fields shown only once the card is opened */
   .t-tss-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(3),
   .t-tss-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(5),
@@ -356,11 +261,6 @@
   .t-tss-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(4),
   .t-tss-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(6),
   .t-tss-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(8),
-  .t-sw-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(3),
-  .t-sw-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(6),
-  .t-sw-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(7),
-  .t-sw-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(10),
-  .t-sw-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(11),
   .t-sw-city > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(3),
   .t-sw-city > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(5),
   .t-sw-city > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(6),
@@ -368,14 +268,6 @@
   .t-vp-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(5),
   .t-vp-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(7),
   .t-vp-vendor > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(8),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(3),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(5),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(6),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(7),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(8),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(11),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(13),
-  .t-vp-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(14),
   .t-canx-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(3),
   .t-canx-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(5),
   .t-canx-ticket > tbody > tr.row:not(:has(.rx:checked)) > td:nth-child(6),
