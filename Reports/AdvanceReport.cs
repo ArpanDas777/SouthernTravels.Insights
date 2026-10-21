@@ -22,10 +22,8 @@ public sealed class AdvanceRequest
     public DateTime RequestedDate => X.T.Booked.AddDays(5 + K);
     public string RequestedOn => Fmt.Date(RequestedDate) + ", 10:" + (10 + K * 3).ToString("D2");
     public DateTime L1Date => X.T.Booked.AddDays(6 + K);
-    public string L1On => Fmt.Date(L1Date) + ", 14:05";
     public string L2By => K % 2 == 1 ? "Sowmya" : "Divya";
     public DateTime L2Date => X.T.Booked.AddDays(7 + K);
-    public string L2On => Fmt.Date(L2Date) + ", 16:40";
     public string Due => Fmt.Date(X.S.Start.AddDays(-3));
     public string PaidOn => Fmt.Date(X.T.Booked.AddDays(9 + K));
 

@@ -48,6 +48,8 @@ public sealed class TrialBalance
     public string Currency { get; init; } = "INR";
     public string Period { get; init; } = "";
     public string OpeningDate { get; init; } = "";
+    /// <summary>The single calendar control shown when Period is "Custom" (visual only).</summary>
+    public RangePicker Range { get; init; } = RangePicker.For(new DateTime(2026, 4, 1), new DateTime(2027, 3, 31));
     public double Opening { get; private set; }
     public double TotDebit { get; private set; }
     public double TotCredit { get; private set; }
@@ -55,12 +57,14 @@ public sealed class TrialBalance
     public List<LedgerMonth> MonthsList { get; } = new();
 
     public int EntryCount => MonthsList.Sum(m => m.Entries.Count);
+
+    /// <summary>The closing bar under the ledger.</summary>
+    public TaxFoot Foot => new("Closing balance", new[] { ("Debit", Money(TotDebit)), ("Credit", Money(TotCredit)) }, "", ClosingAmountText, ClosingColor, ClosingNote);
     public bool HasLedger => VendorId is not null;
 
     /// <summary>Closing balance as printed in the bar and KPI card.</summary>
     public string ClosingAmountText => Money(Math.Abs(Closing));
     public string ClosingNote => Closing > 0 ? "Cr — payable" : Closing < 0 ? "Dr — receivable" : "Nil";
-    public string ClosingCls => Closing > 0 ? "c-red" : "c-grn";
     public string ClosingColor => Closing > 0 ? "var(--color-danger)" : "var(--ok-ink)";
 
     private double Rate => Currency switch { "USD" => 83, "EUR" => 90, _ => 1 };
@@ -105,23 +109,30 @@ public sealed class TrialBalance
 
     private static List<TbLine> LinesOf(string vid)
     {
-        if (SampleData.Vendors.ContainsKey(vid))
-            return ServiceRow.All().Where(x => x.S.VendorId == vid)
-                .Select(x => new TbLine(x.T.No, x.T.Mbk, x.S.Type, x.S.Name, x.S.Start, x.S.End, x.S.Status == "Cancelled", x.Negotiated, x.S.Sell)).ToList();
-
-        // Ledger-only vendors: eight deterministic services from April to November, one of them cancelled.
         var v = Vendors.First(x => x.Id == vid);
-        var seed = int.Parse(vid[1..], CultureInfo.InvariantCulture);
+        if (!SampleData.Vendors.ContainsKey(vid)) return Synthetic(v, 8, 0);
+
+        // Ticket vendors: their real services, plus extra ledger-only history so every ledger has a fuller year.
+        var lines = ServiceRow.All().Where(x => x.S.VendorId == vid)
+            .Select(x => new TbLine(x.T.No, x.T.Mbk, x.S.Type, x.S.Name, x.S.Start, x.S.End, x.S.Status == "Cancelled", x.Negotiated, x.S.Sell)).ToList();
+        lines.AddRange(Synthetic(v, 6, 3));
+        return lines;
+    }
+
+    /// <summary>Deterministic ledger-only services from April to November (every fifth is cancelled).</summary>
+    private static List<TbLine> Synthetic(TbVendor v, int count, int salt)
+    {
+        var seed = int.Parse(v.Id[1..], CultureInfo.InvariantCulture) + salt * 17;
         var lines = new List<TbLine>();
-        for (var i = 0; i < 8; i++)
+        for (var i = 0; i < count; i++)
         {
-            var start = new DateTime(2026, 4, 8).AddDays(i * 31 + seed % 7 * 2);
+            var start = new DateTime(2026, 4, 8).AddDays(i * (230 / count) + seed % 7 * 2 + salt);
             var nights = 2 + (i + seed) % 4;
             var neg = (28000 + (seed * 3 + i * 7) % 9 * 6500) * (v.Currency == "INR" ? 1 : 83);
             var n = 1000 + (seed * 211 + i * 73) % 8000;
             lines.Add(new TbLine((n % 2 == 1 ? "GRP" : "SPL") + n, "MBK-" + (89000 + seed * 10 + i), v.Type,
-                v.Name + " – " + (v.Type == "Accommodation" ? "Suite" : v.Type == "Transport" ? "Full-day transfer" : "Experience"),
-                start, start.AddDays(nights), i == 4, neg, Fmt.Round(neg * 1.18 / 100) * 100));
+                v.Name + " – " + (v.Type == "Accommodation" ? "Suite" : v.Type == "Transport" ? "Full-day transfer" : v.Type == "Guide" ? "Licensed guide" : v.Type == "En-Route Meals" ? "Group lunch" : "Experience"),
+                start, start.AddDays(nights), i % 5 == 4, neg, Fmt.Round(neg * 1.18 / 100) * 100));
         }
         return lines;
     }

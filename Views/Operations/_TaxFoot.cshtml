@@ -1,10 +1,14 @@
 @model SouthernTravels.Insights.Reports.TaxFoot
-@* Totals bar under the table (all filtered rows, not just the current page). Styled in taxreports.css. *@
+@* Totals bar under the table (all filtered rows, not just the current page): tax reports and the Trial Balance closing bar. *@
 <div class="tx-foot" role="status">
     <span class="tx-foot-l">@Model.Label</span>
     @foreach (var i in Model.Items)
     {
         <span class="tx-foot-k">@i.Label <b>@i.Value</b></span>
     }
-    <span class="tx-foot-t"><span class="tx-foot-tl">@Model.TotalLabel</span><b>@Model.Total</b></span>
+    <span class="tx-foot-t">
+        @if (Model.TotalLabel.Length > 0) {<span class="tx-foot-tl">@Model.TotalLabel</span>}
+        <b style="@(Model.TotalColor.Length > 0 ? "color:" + Model.TotalColor : "")">@Model.Total</b>
+        @if (Model.TotalNote.Length > 0) {<span class="tx-foot-tl">@Model.TotalNote</span>}
+    </span>
 </div>

@@ -11,13 +11,14 @@
         }
     </select>
 </label>
-<select class="tb-sel" aria-label="Financial year">
+<select class="tb-sel tb-fy" aria-label="Financial year">
     @foreach (var o in TrialBalance.FyLabels)
     {
         <option value="@o" selected="@(o == tb.Fy)">@o</option>
     }
 </select>
 <span class="tb-range">@tb.RangeText</span>
+<div class="tb-custom"><partial name="_RangePicker" model="tb.Range" /></div>
 <span class="tb-vrule"></span>
 <select class="tb-sel" aria-label="Service type">
     @foreach (var o in TrialBalance.TypeFilters)

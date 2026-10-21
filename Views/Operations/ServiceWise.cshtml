@@ -1,10 +1,12 @@
-@model ServiceWisePage
+﻿@model ServiceWisePage
 @using Microsoft.AspNetCore.Html
 @{
     const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
     string VarCls(double v) => v >= 0 ? "c-grn" : "c-red";
     string[] dcols = { "Ticket", "Pax", "Tour Price", "Vendor", "Service Type / City", "Name of Service", "Category / Meal Plan", "Conf No.", "Start / End", "Sell / Con / Neg", "Variation" };
 }
+@CardCss.For("t-sw-city", new[] { "", "Service City", "Total Duration (days)", "Total Selling", "Total Contracted", "Total Negotiated", "Total Variation", "Total Vendors", "Total Pax" }, title: 2, lead: 1, extras: new[] { 3, 5, 6, 9 })
+@CardCss.For("t-tb", new[] { "Date", "Type", "Particular", "Debit (Paid to vendor)", "Credit (Invoiced)", "Balance" }, title: 1, lead: -1)
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 
@@ -63,12 +65,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="tb-bar" role="status">
-                <span class="tb-bar-l">Closing balance</span>
-                <span class="tb-bar-k">Debit<b>@tb.Money(tb.TotDebit)</b></span>
-                <span class="tb-bar-k">Credit<b>@tb.Money(tb.TotCredit)</b></span>
-                <span class="tb-bar-c @tb.ClosingCls">@tb.ClosingAmountText<small>@tb.ClosingNote</small></span>
-            </div>
+            <partial name="_TaxFoot" model="tb.Foot" />
         }
     }
     else if (Model.IsVendorView)

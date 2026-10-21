@@ -7,7 +7,7 @@ namespace SouthernTravels.Insights.Reports;
 public sealed record PrevTicket(string No, double Tcs, DateTime Dob, DateTime Canx);
 
 /// <summary>Totals bar shown under the table of the TCS / GST / TDS reports.</summary>
-public sealed record TaxFoot(string Label, IReadOnlyList<(string Label, string Value)> Items, string TotalLabel, string Total);
+public sealed record TaxFoot(string Label, IReadOnlyList<(string Label, string Value)> Items, string TotalLabel, string Total, string TotalColor = "", string TotalNote = "");
 
 /// <summary>
 /// One sample international-tour ticket shared by the TCS and GST reports. TCS is taken at 2% of the

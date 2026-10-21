@@ -1,6 +1,8 @@
-@model OpsUserWorkloadPage
+﻿@model OpsUserWorkloadPage
 @{
 }
+@CardCss.For("t-wl-drill", new[] { "Ticket No.", "Passenger", "Tour Period", "Name of Service", "Type", "City" }, title: 1, lead: -1)
+@CardCss.For("t-wl-sum", new[] { "OPS User", "Total", "New", "In Progress", "Completed", "% Complete" }, title: 1, lead: -1)
 <partial name="_ReportHeader" model="Model" />
 
 <div class="frag">
