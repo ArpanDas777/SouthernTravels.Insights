@@ -1,10 +1,14 @@
-@model TicketServiceStatusPage
+﻿@model TicketServiceStatusPage
 @{
     string[] ticketCols = { "", "Ticket Details", "File No.", "Passenger / Tour", "Pax", "Ticket Status", "Booking Exec", "OPS Status ", "Tour Period", "Days Left", "Financials", "Service", "Actions" };
     string[] ticketAlign = { "", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c", "", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c" };
     string[] svcCols = { "Svc Type", "City", "Name of Service", "Category", "Meal Plan", "OPS User / Branch", "OPS Status", "Conf. Date", "Conf. No.", "Svc Start", "Svc End", "Days", "Action" };
     string[] cols = { "", "Vendor ID", "Vendor Name", "City / Cities", "Service Type(s)", "Files", "Total Sale Value", "Vendor Payable", "Balance Pending", "Active" };
 }
+@CardCss.For("t-tss-svc", new[] { "Svc Type", "City", "Name of Service", "Category", "Meal Plan", "OPS User / Branch", "OPS Status", "Conf. Date", "Conf. No.", "Svc Start", "Svc End", "Days", "Action" }, title: 1, lead: -1)
+@CardCss.For("t-tss-ticket", new[] { "", "Ticket Details", "File No.", "Passenger / Tour", "Pax", "Ticket Status", "Booking Exec", "OPS Status", "Tour Period", "Days Left", "Financials", "Service", "Actions" }, title: 2, lead: 1, extras: new[] { 3, 5, 7, 10, 12, 13 })
+@CardCss.For("t-tss-vendor", new[] { "", "Vendor ID", "Vendor Name", "City / Cities", "Service Type(s)", "Files", "Total Sale Value", "Vendor Payable", "Balance Pending", "Active" }, title: 2, lead: 1, extras: new[] { 4, 6, 8 })
+@CardCss.For("t-tss-vendor-d", new[] { "MBK / Ticket No.", "File No.", "Passenger", "Grand / Paid / Balance", "Svc Type", "City", "Name of Service", "Start / End", "Selling / Payable", "Profit / %", "Conf. Date" }, title: 1, lead: -1)
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 

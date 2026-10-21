@@ -1,9 +1,10 @@
-@model VendorPaymentPage
+﻿@model VendorPaymentPage
 @{
     const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
     string[] vdcols = { "Ticket / File", "Passenger / Pax", "Booking / Branch", "Grand / Paid / Balance", "Ticket Status / Tour Start", "OPS Status / User", "Service Type / City", "Name of Service", "No. / Category / Meal Plan", "Conf. Date / No.", "Start / End", "Vendor Payable" };
     string[] tdcols = { "Vendor", "Service Type / City", "Name of Service", "No. / Rooms", "Category / Meal Plan", "Conf. Date / No.", "OPS User", "OPS Status", "Start / End", "Vendor Payable" };
 }
+@CardCss.For("t-vp-vendor", new[] { "", "Vendor ID", "Vendor Name", "Service Type(s)", "City/Cities", "Total Services", "Total Duration", "Total Pax", "Total Business" }, title: 2, lead: 1, extras: new[] { 5, 7, 8 })
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 

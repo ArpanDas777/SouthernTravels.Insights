@@ -51,7 +51,7 @@ button, input, select { font: inherit; }
 
 .shell { display: flex; align-items: stretch; height: calc(100vh - 48px); }
 
-.sidebar { position: sticky; top: 48px; left: 0; z-index: 1; align-self: flex-start; height: calc(100vh - 48px); background: var(--nav-bg); flex: none; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; width: 216px; transition: width .2s ease, transform .2s ease; }
+.sidebar { position: sticky; top: 48px; left: 0; z-index: 1; align-self: flex-start; height: calc(100vh - 48px); background: var(--nav-bg); flex: none; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; width: 216px; transition: width .2s ease, margin-right .2s ease, transform .2s ease; }
 .sidebar .toggle { display: flex; width: 100%; box-sizing: border-box; padding: 8px 16px; border: 0; background: none; cursor: pointer; color: var(--nav-icon); justify-content: flex-start; }
 .sidebar .section { padding: 4px 16px 6px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--nav-sub); white-space: nowrap; }
 .sidebar .nav { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; padding: 9px 12px; border-left: 3px solid transparent; background: transparent; color: var(--nav-label); font-size: 12px; font-weight: 400; white-space: nowrap; justify-content: flex-start; text-decoration: none; }
@@ -69,32 +69,28 @@ button, input, select { font: inherit; }
 .sidebar .chev-closed { display: none; }
 .nav-chk, .filter-chk, .wlx, .rx { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; pointer-events: none; }
 .scrim { display: none; }
-/* Sidebar rail: an icon rail on every report, so it is already closed after a report is picked. It opens over the
-   page while hovered or focused (no layout shift) and stays open, pushing the page, when the toggle is checked. */
+/* Sidebar rail (desktop). It starts open (216px) the first time; picking a report collapses it to the 56px icon rail
+   (a cookie set by the pick link, see OperationsController). The toggle icon flips the state for this page, and the
+   scrim over the page is a label for the same checkbox, so a click on the page collapses an open rail. */
 @media (min-width: 768px) {
   .sidebar { width: 56px; z-index: 25; }
   .sidebar .nav span, .sidebar .who, .sidebar .lbl-full { display: none; }
   .sidebar .lbl-short { display: inline; }
   .sidebar .chev-open { display: none; }
   .sidebar .chev-closed { display: inline; }
-  .sidebar:hover, .sidebar:focus-within { width: 216px; margin-right: -160px; box-shadow: var(--shadow-lg); }
-  #navtoggle:checked ~ .app .sidebar { width: 216px; margin-right: 0; box-shadow: none; }
-  .sidebar:hover .nav span, .sidebar:focus-within .nav span, #navtoggle:checked ~ .app .sidebar .nav span,
-  .sidebar:hover .lbl-full, .sidebar:focus-within .lbl-full, #navtoggle:checked ~ .app .sidebar .lbl-full { display: inline; }
-  .sidebar:hover .who, .sidebar:focus-within .who, #navtoggle:checked ~ .app .sidebar .who { display: flex; }
-  .sidebar:hover .lbl-short, .sidebar:focus-within .lbl-short, #navtoggle:checked ~ .app .sidebar .lbl-short { display: none; }
-  .sidebar:hover .chev-open, .sidebar:focus-within .chev-open, #navtoggle:checked ~ .app .sidebar .chev-open { display: inline; }
-  .sidebar:hover .chev-closed, .sidebar:focus-within .chev-closed, #navtoggle:checked ~ .app .sidebar .chev-closed { display: none; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar { width: 216px; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar .nav span, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar .nav span,
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar .lbl-full, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar .lbl-full { display: inline; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar .who, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar .who { display: flex; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar .lbl-short, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar .lbl-short { display: none; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar .chev-open, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar .chev-open { display: inline; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar .chev-closed, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar .chev-closed { display: none; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .scrim, #navtoggle:checked ~ .app[data-rail="collapsed"] .scrim { display: block; position: fixed; left: 216px; right: 0; top: 48px; bottom: 0; z-index: 24; background: transparent; cursor: default; }
 }
 
 .main { flex: 1; min-width: 0; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; padding: 8px 20px 8px; }
 
 /* ---------- Period bar ---------- */
-.period { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; flex: none; }
-.period .cap { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
-.period .cap-strong { font-size: 12px; font-weight: 700; color: var(--color-navy); }
-.period select, .period input[type=date] { font-size: 12px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px; background: #fff; color: var(--color-text); }
-.period .to, .period .note { font-size: 11px; color: var(--color-muted); }
 .btn-clear { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--color-border); background: #fff; color: var(--color-text); cursor: pointer; }
 
 /* ---------- Title ---------- */
@@ -174,7 +170,7 @@ button, input, select { font: inherit; }
 .empty { padding: 28px; text-align: center; color: var(--color-muted); }
 
 /* Generic report table */
-.gt { width: 100%; min-width: 0; border-collapse: collapse; font-size: 12px; }
+.gt, .tt { width: 100%; min-width: 0; border-collapse: collapse; font-size: 12px; }
 .gt > thead th { background: var(--surface-header-cell); text-align: left; padding: 8px 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--color-muted); border-bottom: 1px solid var(--color-border); white-space: normal; vertical-align: bottom; position: sticky; top: 0; z-index: 3; }
 .gt > thead th .l { text-align: center; }
 .gt > thead th .l2 { font-size: 9px; font-weight: 600; text-transform: none; letter-spacing: 0; }
@@ -182,7 +178,7 @@ button, input, select { font: inherit; }
 /* The prototype centres stacked lines in report tables; sticky label cells stay left. */
 .gt > tbody > tr.row > td .ln, .st td .ln { text-align: center; }
 .gt > tbody > tr.row > td.lab .ln, .gt > tbody > tr.row > td.ta-l .ln { text-align: left; }
-.gt > tbody > tr.row { border-bottom: 1px solid var(--color-border); background: #fff; }
+.gt > tbody > tr.row, .tt > tbody > tr.row { border-bottom: 1px solid var(--color-border); background: #fff; }
 .gt td.chev { padding: 4px 0 4px 6px !important; width: 14px; vertical-align: top; }
 .chev svg { transition: transform .15s; }
 
@@ -195,15 +191,15 @@ tr.drill > td { padding: 0 0 0 28px; background: var(--surface-drilldown); borde
 .sec { flex: 1 1 100%; min-width: 0; overflow-x: auto; background: #fff; border: 1px solid var(--color-border); border-radius: 4px; }
 .sec-t { background: var(--thead-bg); color: var(--thead-ink-strong); padding: 5px 10px; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .sec-t.blue { background: var(--surface-subtable-header); color: var(--color-action-blue); }
-.st { width: 100%; min-width: 0; border-collapse: collapse; font-size: 11px; }
+.st, .svt { width: 100%; min-width: 0; border-collapse: collapse; font-size: 11px; }
 .st th { background: var(--surface-subtable-header); text-align: left; padding: 6px 6px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; color: var(--color-action-blue); white-space: normal; vertical-align: bottom; }
 .st td { padding: 3px 6px; overflow-wrap: normal; vertical-align: top; text-align: left; white-space: normal; }
 .st.st-tight { font-size: 10px; }
 .st.st-tight th, .st.st-tight td { padding-left: 2px; padding-right: 2px; }
 .st.st-tight th { font-size: 8.5px; }
 .gt.dense > tbody > tr.row > td, .gt.dense > thead th { padding-left: 4px; padding-right: 4px; }
-.st tbody tr { background: var(--surface-subtable-row-a); }
-.st tbody tr:nth-child(even) { background: var(--surface-subtable-row-b); }
+.st tbody tr, .svt tbody tr { background: var(--surface-subtable-row-a); }
+.st tbody tr:nth-child(even), .svt tbody tr:nth-child(even) { background: var(--surface-subtable-row-b); }
 .facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; padding: 10px 12px; }
 .facts.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .fact-l { font-size: 9.5px; color: var(--color-muted); }
@@ -274,9 +270,7 @@ tr.banner td { background: var(--color-navy); color: #fff; padding: 3px 8px; fon
 .cal-grid > tbody > tr.row.gtot td.mtot { background: rgba(255,255,255,.15); }
 
 /* ---------- Ticket-Wise table (Ticket & Service Status) ---------- */
-.tt { width: 100%; min-width: 0; border-collapse: collapse; font-size: 12px; }
 .tt > thead th { background: var(--surface-header-cell); text-align: left; padding: 4px 8px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); border-bottom: 1px solid var(--color-border); white-space: normal; position: sticky; top: 0; z-index: 2; }
-.tt > tbody > tr.row { background: #fff; border-bottom: 1px solid var(--color-border); }
 .tt > tbody > tr.row.mine { background: var(--warn-bg); }
 .tt > tbody > tr.row > td { padding: 4px 8px; vertical-align: top; text-align: center; }
 .tt td.lead { padding: 4px 6px 4px 10px; border-left: 4px solid transparent; width: 30px; vertical-align: top; }
@@ -300,11 +294,8 @@ tr.banner td { background: var(--color-navy); color: #fff; padding: 3px 8px; fon
 .tt .act-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 28px; border-radius: 4px; border: 1px solid var(--color-border); background: #fff; color: var(--color-navy); cursor: pointer; padding: 0; }
 .tt tr.drill > td { padding: 0 0 0 28px; }
 .tt .drill-tbl-wrap { border-left: 3px solid var(--color-action-blue); padding: 4px 8px 10px; overflow-x: auto; }
-.svt { width: 100%; min-width: 0; border-collapse: collapse; font-size: 11px; }
 .svt th { background: var(--surface-subtable-header); text-align: left; padding: 3px 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-action-blue); white-space: normal; }
 .svt td { padding: 3px 6px; white-space: normal; }
-.svt tbody tr { background: var(--surface-subtable-row-a); }
-.svt tbody tr:nth-child(even) { background: var(--surface-subtable-row-b); }
 .svt td.name { max-width: 190px; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 .voucher { font-size: 10px; font-weight: 700; display: inline-flex; white-space: normal; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--color-action-blue); background: #fff; color: var(--color-action-blue); cursor: pointer; }
 .voucher.off { border-color: var(--color-border); background: var(--surface-readonly-field); color: var(--color-muted); opacity: .45; cursor: not-allowed; }
@@ -386,7 +377,6 @@ tr.banner td { background: var(--color-navy); color: #fff; padding: 3px 8px; fon
 .ach.bad { background: var(--danger-bg); color: var(--danger-ink); }
 .t2 { margin-left: 6px; font-weight: 700; font-size: 9.5px; }
 .c-ok { color: var(--ok-ink); } .c-wd { color: var(--warn-ink-deep); } .c-dg { color: var(--danger-ink); }
-.mk { font-size: 8px; }
 .side-scroll { overflow: auto !important; }
 
 /* ---------- Comparison controls (Daily EMP Sales) ---------- */
@@ -491,7 +481,6 @@ tr.banner td { background: var(--color-navy); color: #fff; padding: 3px 8px; fon
   .title-row { gap: 6px; }
   .title-row h2 { white-space: normal; font-size: 17px; }
   .title-ctl { margin-left: 0; width: 100%; }
-  .period { gap: 6px; }
   .branch-cards { grid-template-columns: 1fr; }
   .tabs { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
   .tab { flex: none; }
@@ -603,7 +592,6 @@ tr.banner td { background: var(--color-navy); color: #fff; padding: 3px 8px; fon
 
 /* ---------- Trial Balance ledger ("Statement") ---------- */
 .tb-sel { font-size: 12px; padding: 4px 6px; border: 1px solid var(--color-border); border-radius: 4px; background: #fff; color: var(--color-text); }
-.tb-to { font-size: 11px; color: var(--color-muted); }
 .vsel { position: relative; flex: 0 1 230px; min-width: 150px; }
 .vsel-input { width: 100%; box-sizing: border-box; font-size: 12px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px; background: #fff; color: var(--color-text); outline: none; }
 .vsel-input:focus { border-color: var(--focus-ring); }
@@ -618,20 +606,12 @@ tr.banner td { background: var(--color-navy); color: #fff; padding: 3px 8px; fon
 .ledger .ln { text-align: left; }
 .ledger td.ta-r .ln { text-align: right; }
 .bdg-s { padding: 1px 6px; font-size: 9px; letter-spacing: .04em; }
-.tb-bar { flex: none; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 22px; margin-top: 6px; padding: 8px 14px; background: #fff; border: 1px solid var(--rule); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); position: sticky; bottom: 0; z-index: 5; }
-.tb-bar-l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--color-muted); margin-right: auto; }
-.tb-bar-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
-.tb-bar-k b { margin-left: 8px; font-size: 12px; font-family: var(--font-num); color: var(--ink-strong); text-transform: none; letter-spacing: 0; }
-.tb-bar-c { font-family: var(--font-num); font-size: 16px; font-weight: 800; }
-.tb-bar-c small { margin-left: 8px; font-family: var(--font-ui); font-size: 11px; font-weight: 600; }
 @media (max-width: 1149px) {
   .vsel { flex: 1 1 100%; }
   table.cards.ledger > colgroup { display: none; }
   table.cards > tbody > tr > td.zero { display: none !important; }
   table.cards > tbody > tr.banner.mband { padding: 0; margin: 10px 0 4px; background: transparent; border: 0; box-shadow: none; }
   table.cards > tbody > tr.banner.mband > td { padding: 2px 2px; background: transparent; color: var(--color-navy); font-weight: 800; }
-  .tb-bar { margin: 4px -4px 0; border-radius: 10px 10px 0 0; box-shadow: var(--shadow-lg); }
-  .tb-bar-l { flex: 1 1 100%; margin-right: 0; }
 }
 
 /* =====================================================================
@@ -935,9 +915,6 @@ tbody:has(.wl-c:checked) > tr.drill.d-c { display: table-row; }
 /* Trial Balance: cancellation-charge pill, month bands and the closing bar follow the prototype */
 .tone-cancel { background: var(--alert-bg); color: var(--alert-ink); border-color: var(--color-danger); }
 .ledger tr.banner.mband td { background: var(--card-sunken); color: var(--color-muted); font-weight: 600; }
-.tb-bar { background: var(--card-sunken); border-top: 2px solid var(--color-navy); padding: 6px 12px; gap: 8px 24px; font-size: 12px; align-items: center; }
-.tb-bar-l { color: var(--color-navy); letter-spacing: .06em; }
-.ledger .tb-more { font-size: 10px; color: var(--color-action-blue); }
 .tb-field { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--color-muted); }
 .tb-field .tb-sel { font-weight: 600; text-transform: none; letter-spacing: 0; }
 .tb-range { font-size: 11px; color: var(--color-muted); padding: 3px 8px; background: var(--card-sunken); border-radius: 4px; white-space: nowrap; }
@@ -984,7 +961,6 @@ tbody:has(.wl-c:checked) > tr.drill.d-c { display: table-row; }
 .vsel-opt:hover { background: var(--surface-subtable-header); }
 .vsel-opt.on { background: var(--row-selected); font-weight: 700; }
 .ledger > thead th .l, .ledger > thead th .l.ta-r, .ledger > thead th .l.ta-l { text-align: center !important; }
-.ledger > thead th:nth-child(3) .l { text-align: left !important; }
 @media (min-width: 1150px) {
   .toolbar.one-line { flex-wrap: nowrap; }
   .toolbar.one-line .search { flex: 0 1 190px; min-width: 120px; }
@@ -1014,3 +990,23 @@ tbody:has(.bnx:checked) > tr.row:not(.sub) { display: none; }
 .cal-grid > thead tr th.sticky-l, .cal-grid > thead tr th.sticky-s { z-index: 9; }
 .cal-grid > tbody > tr.row > td.sticky-l, .cal-grid > tbody > tr.row > td.sticky-s { z-index: 4; }
 .cal-grid > tbody > tr.banner > td .bn-l { position: sticky; left: 8px; width: max-content; }
+
+/* Trial Balance Period "Custom": one date-range control with a calendar pop-up (CSS only) */
+.tb-custom { display: none; }
+.toolbar:has(select[aria-label="Period"] option[value="Custom"]:checked) .tb-custom { display: block; }
+.toolbar:has(select[aria-label="Period"] option[value="Custom"]:checked) .tb-fy,
+.toolbar:has(select[aria-label="Period"] option[value="Custom"]:checked) .tb-range { display: none; }
+.rp { position: relative; }
+.rp-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px; background: #fff; color: var(--color-text); cursor: pointer; white-space: nowrap; }
+.rp-pop { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; z-index: 45; width: 252px; box-sizing: border-box; background: #fff; border: 1px solid var(--rule); border-radius: var(--radius-md); box-shadow: var(--shadow-md); padding: 10px; outline: none; }
+.rp:focus-within .rp-pop { display: block; }
+.rp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: var(--color-navy); }
+.rp-nav { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-navy); }
+.rp-dow, .rp-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.rp-dow { font-size: 9px; font-weight: 700; color: var(--color-muted); margin-bottom: 2px; }
+.rp-d { height: 28px; line-height: 28px; font-size: 11px; border-radius: 4px; color: var(--color-text); }
+.rp-d.mid { background: var(--surface-subtable-header); color: var(--color-action-blue); border-radius: 0; }
+.rp-d.end { background: var(--color-navy); color: #fff; font-weight: 700; }
+.rp-foot { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-border); font-size: 10.5px; color: var(--color-muted); }
+@media (min-width: 1150px) and (max-width: 1329px) { .toolbar.one-line .tb-range { display: none; } }
+.gt.ledger > tbody > tr.row > td:nth-child(3), .gt.ledger > tbody > tr.row > td:nth-child(3) .ln, .gt.ledger > tbody > tr.row > td:nth-child(3) > div { text-align: left; }

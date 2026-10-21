@@ -81,7 +81,7 @@ Shared views: `Views/Shared/_Layout.cshtml` (header + sidebar), `_ReportHeader.c
 | 768–1149 (tablet) | Sidebar starts as the icon rail. List reports become cards; compact toolbar (icon buttons) and filters open as a full-screen sheet. |
 | < 768 (phone) | As tablet, plus: slide-out menu from the header ☰, two-column KPI cards, Weekly Sales heatmap shows the date and net sales only (tap a day for the detail), 16px form fields (no iOS zoom). |
 
-- Card lists: static CSS (`wwwroot/css/cards.css`) prints each column heading before its value; only the key fields show until a card is opened with its chevron. If a table column count changes, `cards.css` must be regenerated.
+- Card lists: static CSS (`CardCss.For` in each view) prints each column heading before its value; only the key fields show until a card is opened with its chevron. If a column changes, update that view's `CardCss.For` headings.
 - Sideways-scrolling grids (names pinned): the OPS Workload calendar and the Daily EMP Sales Comparison tab (`keep-scroll` / `data-nocards`). Sales vs Target scrolls sideways on desktop only; below 1150 px it is a card per executive.
 - Verified with no page-level horizontal scroll at 360, 430, 768, 820, 1024, 1149, 1150, 1280, 1366, 1920 and 2560 px.
 
@@ -124,4 +124,11 @@ Shared views: `Views/Shared/_Layout.cshtml` (header + sidebar), `_ReportHeader.c
 - Service wise: Vendor Wise and the City-wise services table use combined cells (ticket / MBK / file, vendor + id, type + city, category + meal plan); Tour Price and Sell / Con / Neg are `.kv` label-value grids. Trial Balance has centred headers, a one-line toolbar, a CSS vendor list (`?tab=tb&vendor=V1xx`) and five more ledger-only vendors (V108–V112, `TrialBalance.Vendors`).
 - OPS User Workload: Period sits in the title row, branch banners collapse their users (the subtotal stays), calendar header offsets and pinned columns fixed.
 - Vendor Payment: vendor drill-down and ticket-wise tables merged as requested; Start / End is compact on the ticket drill-down.
-- Card labels for the restructured tables now come from `CardCss.For` in the views (their old rules were removed from `cards.css`).
+- Card labels for the restructured tables now come from `CardCss.For` in the views (`cards.css` is gone).
+
+## Side menu (per SIDE_MENU.md)
+
+- Desktop: the rail starts open (216px). Picking a report links to `?pick=1`; `OperationsController` sets a session cookie (`rail=c`) and redirects to the clean URL, so every page after that starts as the 56px icon rail (full width for the report). Tab and paging links keep the rail collapsed through the cookie.
+- The toggle icon flips open / collapsed for the current page; a click on the page beside an open rail collapses it (a transparent scrim label for the same checkbox).
+- Phones (<768px): hamburger opens the 260px drawer over a scrim; closes on scrim click or picking a report (unchanged).
+- Not kept from the doc (needs script or stored state): restoring the last report after a refresh, per-report remembered tabs, and the toggle tooltip changing between "Collapse menu" / "Expand menu".

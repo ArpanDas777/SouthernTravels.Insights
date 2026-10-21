@@ -1,4 +1,6 @@
-@model DailyEmpSalesPage
+﻿@model DailyEmpSalesPage
+@CardCss.For("t-emp-day", new[] { "Employee", "Wk1 total", "Wk2 total", "Target (Current Year)", "Target till date", "Sales till date", "Achv %" }, title: 1, lead: -1, extras: new[] { 2, 3, 4 })
+@CardCss.For("t-emp-month", new[] { "Employee", "Q1 total", "Q2 total", "Q3 total", "Q4 total", "Target (Current Year)", "Target till date", "Sales till date", "Achv %" }, title: 1, lead: -1, extras: new[] { 2, 3, 4, 5, 6 })
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 

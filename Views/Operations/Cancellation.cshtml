@@ -1,4 +1,4 @@
-@model CancellationPage
+﻿@model CancellationPage
 @using Microsoft.AspNetCore.Html
 @{
     const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
@@ -13,6 +13,10 @@
         return Ui.Ln("-");
     }
 }
+@CardCss.For("t-canx-ticket", new[] { "", "Ticket / MBK", "File No.", "Passenger / Pax", "Bk Exec / Branch", "Canx Txn No.", "Canx Date", "Days Left", "Canx Reason", "Total Canx Charge", "Refund / Reissue", "Cancel Profit / %" }, title: 2, lead: 1, extras: new[] { 3, 5, 6, 9, 12 })
+@CardCss.For("t-canx-ticket-v", new[] { "Vendor", "Service", "City", "Total Payable", "Advance Paid", "Canx Charge (Sys)", "Vendor Settlement" }, title: 1, lead: -1)
+@CardCss.For("t-canx-vendor", new[] { "", "Vendor Name / ID", "Service Type(s)", "Cities", "Canx Count", "Total Svc Duration", "Total Payable", "Advance Paid", "Final Payable", "Refund from Vendor" }, title: 2, lead: 1, extras: new[] { 3, 4, 6, 7, 8 })
+@CardCss.For("t-canx-vendor-d", new[] { "Ticket / MBK", "File No.", "Service", "City", "Svc Date", "OPS User", "OPS Status", "Payable", "Advance", "Canx Charge", "Override", "Override Approval", "Final Payable", "Refund from Vendor", "File Profit / SP%" }, title: 1, lead: -1)
 <partial name="_ReportHeader" model="Model" />
 <partial name="_KpisTabsToolbar" model="Model" />
 
