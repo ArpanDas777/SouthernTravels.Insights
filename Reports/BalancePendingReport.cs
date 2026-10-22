@@ -1,4 +1,4 @@
-﻿using SouthernTravels.Insights.Data;
+using SouthernTravels.Insights.Data;
 using SouthernTravels.Insights.Infrastructure;
 
 namespace SouthernTravels.Insights.Reports;

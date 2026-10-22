@@ -1,0 +1,39 @@
+@model WeeklySalesTrendPage
+@* Controls are visual only; the heatmap highlights net sales. *@
+<div class="wst-ctl">
+    <span class="cap-strong">Period:</span>
+    <input type="date" aria-label="From" value="@Model.From" />
+    <span class="to">to</span>
+    <input type="date" aria-label="To" value="@Model.To" />
+    <span class="note">Showing sample data</span>
+    <span class="vrule"></span>
+    <span class="grp">
+        <span class="cap-strong">Branch:</span>
+        <select aria-label="Branch">
+            <option value="">All branches</option>
+            @foreach (var b in SalesSample.TrendBranches)
+            {
+                <option value="@b.Branch">@b.Branch</option>
+            }
+        </select>
+    </span>
+    <span class="grp">
+        <span class="cap-strong">Ticket type:</span>
+        <select aria-label="Ticket type">
+            <option value="">All types</option>
+            @foreach (var t in SalesSample.TicketTypes)
+            {
+                <option value="@t.Type">@t.Type</option>
+            }
+        </select>
+    </span>
+    <span class="spacer"></span>
+    <span class="grp">
+        <span class="cap-strong">Highlight:</span>
+        <span class="hl">
+            <button type="button" class="on">Net sales</button>
+            <button type="button">Gross sales</button>
+            <button type="button">Cancellation</button>
+        </span>
+    </span>
+</div>

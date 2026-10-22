@@ -1,0 +1,258 @@
+@model CashSheetAuditPage
+@* Cash Sheet Audit Report. View = the `tab` query value: day (Matrix grid), rows, detail, ledger. Everything shown is prepared by CashSheetAuditReport; amounts the prototype opened as modals are plain text with a native tooltip. *@
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    @if (Model.View == "day")
+    {
+        <div class="card keep-scroll cs-card" style="--mobmin:2300px">
+            <table class="gt cs-grid">
+                <thead>
+                    <tr class="weeks">
+                        @{ var gi = 0; }
+                        @foreach (var g in CashSheetAuditPage.GridGroups)
+                        {
+                            <th colspan="@g.Span" class="@(g.Label.Length > 0 ? "cs-gl" : "cs-gb")" style="@(gi == 0 ? "left:0" : gi == 1 ? "left:76px" : "")">
+                                @if (g.Label.Length > 0) { <span class="wk-btn static">@g.Label</span> }
+                            </th>
+                            gi++;
+                        }
+                    </tr>
+                    <tr>
+                        @for (var i = 0; i < CashSheetAuditPage.GridHeaders.Length; i++)
+                        {
+                            <th class="@(i == 0 ? "cs-s1" : i == 1 ? "cs-s2" : "")"><div class="l">@CashSheetAuditPage.GridHeaders[i]</div></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.GridRows)
+                    {
+                        <tr class="row">
+                            <td class="cs-s1 fw6">@r.Date</td>
+                            <td class="cs-s2 fw6">@r.Branch</td>
+                            <td class="cs-l">@r.Cashier</td>
+                            <td class="cs-c">@r.Shift</td>
+                            <td class="cs-l fs105">@r.Serial</td>
+                            @foreach (var a in r.Amts)
+                            {
+                                <td class="cs-r"><span class="@a.Cls" title="@a.Tip">@a.Text</span></td>
+                            }
+                            <td class="cs-r"><span class="fw8 c-navy">@r.Total</span></td>
+                        </tr>
+                    }
+                    @if (Model.GridRows.Count == 0)
+                    {
+                        <tr><td colspan="@CashSheetAuditPage.GridHeaders.Length" class="empty">No cash sheets for this selection.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Model.Pager is not null)
+        {
+            <partial name="_Pager" model="Model.Pager" />
+        }
+    }
+    else if (Model.View == "rows")
+    {
+        <div class="card keep-scroll cs-card">
+            <div class="cs-rows">
+                <div class="cs-rhead cs-rgrid">
+                    <span>Cash sheet</span><span>Collections (bank deposit · POS · links · online · cash)</span><span>Booking adjustments</span><span class="ta-r">Sales</span><span>Bank deposit</span><span class="ta-r">Cash balance</span><span>Remarks</span><span class="ta-c">Status</span>
+                </div>
+                @foreach (var u in Model.RowsItems)
+                {
+                    <div class="cs-rrow cs-rgrid">
+                        <div class="cs-col">
+                            <span class="fw7 fs12">@u.Date</span>
+                            <span class="fs105 c-mut">@u.Serial</span>
+                            <span>@u.Who</span>
+                        </div>
+                        <div class="cs-col">
+                            @foreach (var c in u.Collections)
+                            {
+                                if (c.Group)
+                                {
+                                    <span class="cs-grp">@c.Label</span>
+                                }
+                                else
+                                {
+                                    <div class="cs-kv cs-ind"><span>@c.Label</span><span class="fw6 c-blue">@c.Value</span></div>
+                                }
+                            }
+                        </div>
+                        <div class="cs-col">
+                            @foreach (var a in u.Adjustments)
+                            {
+                                <div class="cs-kv"><span>@a.Label</span><span class="fw6 @a.Cls">@a.Value</span></div>
+                            }
+                        </div>
+                        <div class="cs-col ta-r">
+                            <span class="c-mut fs10">Cash</span>
+                            <span class="fw6">@u.Cash</span>
+                            <span class="c-mut fs10 mt3">Total sales</span>
+                            <span class="fw8 fs13 c-navy">@u.Total</span>
+                        </div>
+                        <div class="cs-col">
+                            <span class="fw7">@u.Deposit</span>
+                            <span class="c-mut">@u.DepositDate</span>
+                            <span class="fs105">@u.Bank</span>
+                            @if (u.Slip is not null) { <span class="c-blue fw6">@u.Slip</span> }
+                        </div>
+                        <div class="cs-col ta-r">
+                            <span class="c-mut fs10">Opening</span>
+                            <span>@u.Opening</span>
+                            <span class="c-mut fs10 mt3">Cash</span>
+                            <span>@u.CashIn</span>
+                            <span class="c-mut fs10 mt3">Closing</span>
+                            <span class="fw7">@u.Closing</span>
+                            <span class="c-mut fs10 mt3">Entry @u.Entry</span>
+                        </div>
+                        <span class="fs105 @(u.HasRemarks ? "" : "c-mut")">@u.Remarks</span>
+                        <div class="ta-c">
+                            <span class="cs-st @u.Status.Tone">@u.Status.Text</span>
+                            @if (u.Approve) { <span class="cs-act">Approve</span> }
+                        </div>
+                    </div>
+                }
+                @if (Model.RowsItems.Count == 0)
+                {
+                    <div class="empty">No cash sheets for this selection.</div>
+                }
+            </div>
+        </div>
+    }
+    else if (Model.View == "detail")
+    {
+        <div class="cs-split">
+            @for (var i = 0; i < Model.DetailItems.Count; i++)
+            {
+                <input type="radio" class="cs-rd" name="cs-sheet" id="cs-s@(i)" checked="@(i == 0)" aria-label="@Model.DetailItems[i].Serial" />
+            }
+            <div class="cs-list">
+                @for (var i = 0; i < Model.DetailItems.Count; i++)
+                {
+                    var u = Model.DetailItems[i];
+                    <label class="cs-li" for="cs-s@(i)">
+                        <span class="cs-li1"><span>@u.Date</span><span class="c-navy">@u.Total</span></span>
+                        <span class="fs105 c-mut">@u.Serial</span>
+                        <span class="cs-li3"><span class="cs-ell">@u.Who</span><span class="cs-lst @u.Status.Tone">@u.Status.Text</span></span>
+                    </label>
+                }
+            </div>
+            <div class="cs-detail">
+                @for (var i = 0; i < Model.DetailItems.Count; i++)
+                {
+                    var u = Model.DetailItems[i];
+                    <div class="cs-dp" id="cs-d@(i)">
+                        <div class="cs-dhead">
+                            <span class="fs15 fw7 cs-hd">@u.Heading</span>
+                            <span class="fs12 c-mut">@u.HeadingWho · @u.Date</span>
+                            <span class="cs-dtot">Total sales <b>@u.Total</b></span>
+                        </div>
+                        <div class="cs-secs">
+                            @foreach (var s in u.Sections)
+                            {
+                                <div class="cs-sec">
+                                    <div class="cs-sect">@s.Title</div>
+                                    @foreach (var it in s.Items)
+                                    {
+                                        <div class="cs-it"><span class="c-mut">@it.Label</span><span class="@it.Cls">@it.Value</span></div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                @if (Model.DetailItems.Count == 0)
+                {
+                    <div class="empty">No cash sheets for this selection.</div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="cs-led">
+            @for (var i = 0; i < Model.Branches.Count; i++)
+            {
+                <input type="radio" class="cs-rd" name="cs-branch" id="cs-lb@(i)" checked="@(i == 0)" aria-label="@Model.Branches[i].Branch" />
+            }
+            <div class="cs-rail">
+                @for (var i = 0; i < Model.Branches.Count; i++)
+                {
+                    var b = Model.Branches[i];
+                    <label class="cs-rb" for="cs-lb@(i)">
+                        <span class="cs-rb1"><span class="fw7">@b.Branch</span><span class="fw7 fs10 @(b.HasPending ? "c-amb" : "c-grn")">@b.PendingText</span></span>
+                        <span class="fs10 c-mut mt2">Closing balance</span>
+                        <span class="cs-rbv">@b.Closing</span>
+                    </label>
+                }
+            </div>
+            <div class="cs-lmain">
+                @for (var i = 0; i < Model.Branches.Count; i++)
+                {
+                    var b = Model.Branches[i];
+                    <div class="cs-lp" id="cs-lp@(i)">
+                        <div class="cs-lhead"><span class="fw7 fs13">@b.Branch</span><span class="fs11 c-mut">Cash ledger · @b.Range</span></div>
+                        <div class="cs-lscroll">
+                            <table class="cs-ltbl">
+                                <thead>
+                                    <tr>
+                                        <th class="ta-l" style="width:92px">Date</th>
+                                        <th class="ta-l" style="min-width:300px">Particulars</th>
+                                        <th class="ta-r" style="width:110px">Cash in</th>
+                                        <th class="ta-r" style="width:110px">Cash out</th>
+                                        <th class="ta-r" style="width:120px">Balance</th>
+                                        <th class="ta-c" style="width:120px">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="cs-lsum">
+                                        <td class="c-mut nowrap">@b.OpenDate</td>
+                                        <td class="fw6">Opening cash balance (brought forward)</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td class="ta-r nowrap fw7">@b.Opening</td>
+                                        <td></td>
+                                    </tr>
+                                    @foreach (var e in b.Entries)
+                                    {
+                                        <tr class="cs-lrow">
+                                            <td class="c-mut nowrap">@e.Date</td>
+                                            <td>
+                                                <div class="fw6">@e.Text</div>
+                                                <div class="fs105 c-mut">@e.Sub</div>
+                                                @if (e.Deposit) { <div class="fs105 fw6 c-blue mt2">View deposit slip</div> }
+                                            </td>
+                                            <td class="ta-r nowrap fw6 c-blue">@e.In</td>
+                                            <td class="ta-r nowrap fw6">@e.Out</td>
+                                            <td class="ta-r nowrap fw7">@e.Balance</td>
+                                            <td class="ta-c">
+                                                <span class="cs-st sm @e.Status.Tone">@e.Status.Text</span>
+                                                @if (e.Approve) { <div class="cs-act mt3">Approve</div> }
+                                            </td>
+                                        </tr>
+                                    }
+                                    @if (b.Entries.Count == 0)
+                                    {
+                                        <tr><td colspan="6" class="empty">No cash entries for this branch in the selected dates.</td></tr>
+                                    }
+                                    <tr class="cs-lsum cs-lclose">
+                                        <td></td>
+                                        <td class="fw8">Closing cash balance</td>
+                                        <td class="ta-r nowrap fw8 c-blue">@b.In</td>
+                                        <td class="ta-r nowrap fw8">@b.Out</td>
+                                        <td class="ta-r nowrap fw8 c-navy">@b.Closing</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

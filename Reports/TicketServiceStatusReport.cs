@@ -53,7 +53,8 @@ public static class TicketServiceStatusReport
 {
     private static readonly TabDef[] Tabs = { new("ticket", "Ticket-Wise View"), new("vendor", "Vendor-Wise View") };
 
-    public static TicketServiceStatusPage Build(ReportQuery q)
+    /// <param name="filters">The filter dropdowns (from the Operations API); null uses the built-in lists.</param>
+    public static TicketServiceStatusPage Build(ReportQuery q, IReadOnlyList<FilterDef>? filters = null)
     {
         var tab = ReportPage.ResolveTab(q, Tabs);
         var page = new TicketServiceStatusPage
@@ -67,7 +68,7 @@ public static class TicketServiceStatusReport
             PeriodField = "Booking Date",
             Tabs = Tabs,
             ActiveTab = tab,
-            Filters = CommonFilters.TicketService,
+            Filters = filters ?? CommonFilters.TicketService,
             DateFields = CommonFilters.TicketServiceDates,
         };
 

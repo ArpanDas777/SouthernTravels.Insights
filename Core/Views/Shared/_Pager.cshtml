@@ -1,0 +1,17 @@
+@model Pager
+<nav class="pager" aria-label="Pagination">
+    <span class="lbl">@Model.Label</span>
+    <div class="btns">
+        @foreach (var b in Model.Buttons)
+        {
+            if (b.Href is null)
+            {
+                <span class="pg @(b.Active ? "active" : "")" aria-disabled="true">@b.Label</span>
+            }
+            else
+            {
+                <a class="pg @(b.Active ? "active" : "")" href="@b.Href">@b.Label</a>
+            }
+        }
+    </div>
+</nav>

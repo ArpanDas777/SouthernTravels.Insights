@@ -1,0 +1,223 @@
+@model TicketServiceStatusPage
+@{
+    string[] ticketCols = { "", "Ticket Details", "File No.", "Passenger / Tour", "Pax", "Ticket Status", "Booking Exec", "OPS Status ", "Tour Period", "Days Left", "Financials", "Service", "Actions" };
+    string[] ticketAlign = { "", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c", "", "ta-c", "ta-c", "ta-c", "ta-c", "ta-c" };
+    string[] svcCols = { "Svc Type", "City", "Name of Service", "Category", "Meal Plan", "OPS User / Branch", "OPS Status", "Conf. Date", "Conf. No.", "Svc Start", "Svc End", "Days", "Action" };
+    string[] cols = { "", "Vendor ID", "Vendor Name", "City / Cities", "Service Type(s)", "Files", "Total Sale Value", "Vendor Payable", "Balance Pending", "Active" };
+}
+@CardCss.For("t-tss-svc", new[] { "Svc Type", "City", "Name of Service", "Category", "Meal Plan", "OPS User / Branch", "OPS Status", "Conf. Date", "Conf. No.", "Svc Start", "Svc End", "Days", "Action" }, title: 1, lead: -1)
+@CardCss.For("t-tss-ticket", new[] { "", "Ticket Details", "File No.", "Passenger / Tour", "Pax", "Ticket Status", "Booking Exec", "OPS Status", "Tour Period", "Days Left", "Financials", "Service", "Actions" }, title: 2, lead: 1, extras: new[] { 3, 5, 7, 10, 12, 13 })
+@CardCss.For("t-tss-vendor", new[] { "", "Vendor ID", "Vendor Name", "City / Cities", "Service Type(s)", "Files", "Total Sale Value", "Vendor Payable", "Balance Pending", "Active" }, title: 2, lead: 1, extras: new[] { 4, 6, 8 })
+@CardCss.For("t-tss-vendor-d", new[] { "MBK / Ticket No.", "File No.", "Passenger", "Grand / Paid / Balance", "Svc Type", "City", "Name of Service", "Start / End", "Selling / Payable", "Profit / %", "Conf. Date" }, title: 1, lead: -1)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    <div class="legend">
+        <span class="swatch"></span>Files assigned to you (@SampleData.Me)
+        <a class="legend-btn" href="@Model.ShowAllHref">@Model.ShowAllLabel</a>
+    </div>
+
+    @if (Model.IsTicketView)
+    {
+        <div class="card">
+                @AlignCss.For("t-tss-ticket", ticketCols, (11, "right"))
+            <table class="tt cards t-tss-ticket">
+                <thead>
+                    <tr>
+                        @for (var i = 0; i < ticketCols.Length; i++)
+                        {
+                            <th class="@ticketAlign[i]">@ticketCols[i]</th>
+                        }
+                    </tr>
+                </thead>
+                @foreach (var r in Model.TicketRows)
+                {
+                    var t = r.T;
+                    <tbody>
+                        <tr class="row @(r.Mine ? "mine" : "")">
+                            <td class="lead">
+                                <div class="stack">
+                                    <span class="mdot"></span>
+                                    <label class="rx-l"><input type="checkbox" class="rx" aria-label="Show services" /><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></label>
+                                </div>
+                            </td>
+                            <td><div class="tno">@t.No</div><div class="sub">@t.Mbk</div></td>
+                            <td class="file">@Ui.FileNo(t.File)</td>
+                            <td><div class="fw6">@t.PaxName</div><div class="tour">@t.Tour</div></td>
+                            <td class="fw7">@t.Pax</td>
+                            <td>@Ui.Badge(t.Status, "nw")<div class="sub mt3">Booked: @Fmt.Date(t.Booked)</div></td>
+                            <td><div>@t.Exec</div><div class="sub">@t.Branch</div></td>
+                            <td>@Ui.Badge(t.OverallOps, "nw")<div class="sub mt3">@r.OpsBranches</div></td>
+                            <td class="fs11"><div>@Fmt.Date(t.Start)</div><div class="c-mut fs10">to</div><div>@Fmt.Date(t.End)</div><div class="fw7 mt2">@t.Days days</div></td>
+                            <td><span class="dl @r.DaysLeftTone">@r.DaysLeftText</span></td>
+                            <td class="fin">
+                                @if (r.HasBalance)
+                                {
+                                    <div class="bal">@Fmt.Inr(t.Balance)</div>
+                                    <div class="bal-cap">Bal. Pending · @r.BalancePct</div>
+                                }
+                                else
+                                {
+                                    <div class="paid-full">Fully Paid · 100%</div>
+                                }
+                                <div class="sub">@Fmt.Inr(t.Grand) total</div>
+                                @if (r.HasBalance)
+                                {
+                                    <div class="sub">@Fmt.Inr(t.Paid) paid · @r.PaidPct</div>
+                                }
+                            </td>
+                            <td><span class="svc-n">@t.Services.Count</span></td>
+                            <td>
+                                @* Actions: a pure-CSS hover / focus menu (visual only). *@
+                                <div class="act-wrap">
+                                    <button type="button" class="act-btn" aria-label="Actions" aria-haspopup="menu">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                                    </button>
+                                    <div class="act-menu" role="menu">
+                                        <button type="button" role="menuitem">Download Ticket</button>
+                                        <button type="button" role="menuitem">Download Itinerary</button>
+                                        <button type="button" role="menuitem">View Cost Sheet</button>
+                                        <button type="button" role="menuitem" class="@(t.VouchersReady ? "" : "off")" title="@(t.VouchersReady ? "Download all vouchers (ZIP)" : "All services must be completed first")">Download Vouchers</button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="drill">
+                            <td colspan="13">
+                                <div class="drill-tbl-wrap">
+                                    <table class="svt cards t-tss-svc">
+                                        <thead><tr>@foreach (var c in svcCols) {<th class="@(c is "Days" or "Action" ? "ta-c" : "")">@c</th>}</tr></thead>
+                                        <tbody>
+                                            @foreach (var s in t.Services)
+                                            {
+                                                <tr>
+                                                    <td>@Ui.Pill(s.Type, "nw")</td>
+                                                    <td>@s.City</td>
+                                                    <td class="name" title="@s.Name">@s.Name</td>
+                                                    <td>@s.Category</td>
+                                                    <td>@s.Meal</td>
+                                                    <td><div>@s.Ops</div><div class="fs10 c-mut">@s.OpsBranch</div></td>
+                                                    <td>@Ui.Badge(s.OpsStatus, "nw")</td>
+                                                    @if (s.Conf is null)
+                                                    {
+                                                        <td class="c-warn fw7">Pending</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@Fmt.Short(s.Conf.Value)</td>
+                                                    }
+                                                    <td>@s.ConfNo</td>
+                                                    <td>@Fmt.Short(s.Start)</td>
+                                                    <td>@Fmt.Short(s.End)</td>
+                                                    <td class="ta-c">@s.Days</td>
+                                                    <td class="ta-c">
+                                                        <button type="button" class="voucher @(s.VoucherReady ? "" : "off")"
+                                                                title="@(s.VoucherReady ? "Download voucher" : "Service must be completed and confirmed first")">
+                                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"></path></svg>Voucher
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.TicketRows.Count == 0)
+                {
+                    <tbody><tr><td colspan="13" class="empty">No tickets found.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+                @AlignCss.For("t-tss-vendor", cols)
+            <table class="gt cards t-tss-vendor">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @foreach (var g in Model.VendorRows)
+                {
+                    <tbody>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show services" /><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></label></td>
+                            <td>@Ui.Ln(g.Id, "fw7 c-blue")</td>
+                            <td>@Ui.Ln(g.Name, "fw7")</td>
+                            <td>@Ui.Ln(g.Cities)</td>
+                            <td>@foreach (var ty in g.Types) {@Ui.LnHtml(Ui.Pill(ty))}</td>
+                            <td class="ta-c">@Ui.Ln(g.TicketCount, "fw7")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Sell), "fw7 c-blue")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable), "fw7")</td>
+                            <td class="ta-r">
+                                @if (g.HasBalance)
+                                {
+                                    @Ui.Ln(Fmt.Inr(g.Balance), "fw7 c-red")
+                                    @Ui.Ln("to be paid", "fs9 c-mut")
+                                }
+                                else
+                                {
+                                    @Ui.Ln(Fmt.Inr(0), "c-grn")
+                                }
+                            </td>
+                            <td class="ta-c">@Ui.LnHtml(Ui.Badge(g.Active ? "Active" : "Inactive"))</td>
+                        </tr>
+                        <tr class="drill">
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">@g.Name — services</div>
+                                        <table class="st cards t-tss-vendor-d">
+                                            <thead>
+                                                <tr>
+                                                    <th>MBK / Ticket No.</th><th>File No.</th><th>Passenger</th><th class="ta-r">Grand / Paid / Balance</th>
+                                                    <th>Svc Type</th><th>City</th><th>Name of Service</th><th>Start / End</th>
+                                                    <th class="ta-r">Selling / Payable</th><th class="ta-r">Profit / %</th><th>Conf. Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var x in g.Items)
+                                                {
+                                                    <tr>
+                                                        <td>@Ui.Two(x.T.Mbk, x.T.No, "c-blue")</td>
+                                                        <td>@Ui.FileNo(x.T.File, "fs105")</td>
+                                                        <td>@Ui.Ln(x.T.PaxName)</td>
+                                                        <td class="ta-r">@Ui.GrandPaidBalance(x.T)</td>
+                                                        <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
+                                                        <td>@Ui.Ln(x.S.City)</td>
+                                                        <td>@Ui.Ln(x.S.Name, "fw6")</td>
+                                                        <td>@Ui.Ln(Fmt.Short(x.S.Start))@Ui.Ln(Fmt.Short(x.S.End), "c-mut")</td>
+                                                        <td class="ta-r">
+                                                            @Ui.Ln(Fmt.Inr(x.S.Sell), "fw7")@Ui.Ln("sell", "fs9 c-mut")
+                                                            @Ui.Ln(Fmt.Inr(x.S.Payable), "c-blue mt3")@Ui.Ln("payable", "fs9 c-mut")
+                                                        </td>
+                                                        <td class="ta-r">
+                                                            @Ui.Ln(Fmt.Inr(x.Profit), "fw7 c-grn")@Ui.Ln("profit", "fs9 c-mut")
+                                                            @Ui.Ln(x.ProfitPct, "mt3")@Ui.Ln("on sell", "fs9 c-mut")
+                                                        </td>
+                                                        <td>@Ui.Conf(x.S.Conf)</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.VendorRows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No vendors found.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

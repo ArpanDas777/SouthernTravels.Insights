@@ -6,8 +6,16 @@ public sealed record Kpi(string Label, string Value, string Color = "var(--color
 
 public sealed record TabDef(string Key, string Label);
 
-/// <summary>A dropdown shown in the filter panel (visual only).</summary>
-public sealed record FilterDef(string Label, IReadOnlyList<string> Options);
+/// <summary>One option of a filter dropdown: the value it stands for (an API id or code) and the text shown.</summary>
+public sealed record FilterOption(string Value, string Text);
+
+/// <summary>
+/// A dropdown shown in the filter panel. Lists from the API carry ids as values; the fixed lists use the text as the value.
+/// </summary>
+public sealed record FilterDef(string Label, IReadOnlyList<FilterOption> Items)
+{
+    public FilterDef(string label, IReadOnlyList<string> options) : this(label, options.Select(o => new FilterOption(o, o)).ToList()) { }
+}
 
 public sealed record NavItem(string Id, string Action, string Label, string Icon);
 

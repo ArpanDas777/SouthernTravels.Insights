@@ -1,0 +1,96 @@
+@model ReportPage
+@* KPI cards → view tabs (plain links) → toolbar → filter panel. Search, filters, Export and the other buttons are visual only; the filter panel opens with a CSS-only checkbox. *@
+@if (Model.Kpis.Count > 0)
+{
+    <div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(@(Model.KpiMinWidth)px,1fr))">
+        @foreach (var k in Model.Kpis)
+        {
+            <div class="kpi" title="@(k.Tip ?? "")">
+                <div class="k-l">@k.Label</div>
+                <div class="k-v @(k.Big ? "big" : "")" style="color:@k.Color@(Model.KpiValueSize > 0 ? $";font-size:{Model.KpiValueSize}px" : "")">@k.Value@if (k.Sub is not null) {<span class="k-s">@k.Sub</span>}</div>
+            </div>
+        }
+    </div>
+}
+
+<div class="@(Model.StickyHeader ? "sticky-bar" : "fc")">
+@if (Model.Tabs.Count > 0)
+{
+    <div class="tabs @(Model.CompactTabs ? "compact" : "")">
+        @foreach (var t in Model.Tabs)
+        {
+            <a class="tab @(t.Key == Model.ActiveTab ? "active" : "")" href="@Model.TabHref(t.Key)">@t.Label</a>
+        }
+    </div>
+}
+
+@if (Model.HasToolbar)
+{
+    <input type="checkbox" id="filtertoggle" class="filter-chk" aria-hidden="true" tabindex="-1" />
+    <div class="toolbar @(Model.Tabs.Count > 0 ? "has-tabs" : "") @Model.ToolbarClass">
+        <label class="search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <input placeholder="@Model.SearchPlaceholder" />
+        </label>
+        @if (Model.ToolbarExtra is not null)
+        {
+            <partial name="@Model.ToolbarExtra" model="Model" />
+        }
+        @if (Model.HasFilters)
+        {
+        <label for="filtertoggle" class="tb-btn" role="button" tabindex="0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg><span class="tb-lbl">Filters</span>
+        </label>
+        }
+        <span class="count">@Model.ResultLabel</span>
+        <span class="spacer"></span>
+        @if (Model.HasExport)
+        {
+            <button type="button" class="tb-btn primary" title="Export" aria-label="Export">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 20h16"></path></svg><span class="tb-lbl">Export</span>
+            </button>
+        }
+        @if (Model.HasExpand)
+        {
+            <button type="button" class="tb-btn" title="Expand All" aria-label="Expand All"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"></path></svg><span class="tb-lbl">Expand All</span></button>
+            <button type="button" class="tb-btn" title="Collapse All" aria-label="Collapse All"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20 5-5 5 5M7 4l5 5 5-5"></path></svg><span class="tb-lbl">Collapse All</span></button>
+        }
+    </div>
+
+    @if (Model.HasFilters)
+    {
+    <div class="filters" id="filter-panel">
+        <div class="sheet-head"><b>Filters</b><label for="filtertoggle" class="sheet-x" aria-label="Close filters">✕</label></div>
+        <div class="filters-head">
+            <button type="button" class="btn-clear">Clear filters</button>
+        </div>
+        <div class="grid">
+            @foreach (var f in Model.Filters)
+            {
+                <label class="flt">
+                    @f.Label
+                    <select>
+                        <option value="">All</option>
+                        @foreach (var o in f.Items)
+                        {
+                            <option value="@o.Value">@o.Text</option>
+                        }
+                    </select>
+                </label>
+            }
+            @foreach (var d in Model.DateFields)
+            {
+                <div class="flt">
+                    @d
+                    <button type="button" class="range-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+                        <span>Select date range</span>
+                    </button>
+                </div>
+            }
+        </div>
+        <div class="sheet-foot"><button type="button" class="btn-clear">Clear filters</button><label for="filtertoggle" class="sheet-done">Done</label></div>
+    </div>
+    }
+}
+</div>

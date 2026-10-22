@@ -1,0 +1,122 @@
+@model GstPage
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+    string[] cols = { "", "Ticket Details", "Status", "Passenger", "Executive", "Journey / Completion", "Taxable Value", "GST / TCS", "Gross / Advance", "Balance" };
+    string[] widths = { "2%", "14%", "9%", "12%", "11%", "11%", "10%", "11%", "10%", "10%" };
+    string[] vcols = { "Service", "Voucher No.", "OPS User / Branch" };
+}
+@CardCss.For("t-gst", cols, title: 2, lead: 1, extras: new[] { 5, 6, 7 })
+@AlignCss.For("t-gst", cols)
+@CardCss.For("t-gst-d", vcols, title: 1)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    <div class="card">
+        <table class="gt dense cards t-gst tx-t tx-fixed tx-w900">
+            <colgroup>
+                @foreach (var w in widths)
+                {
+                    <col style="width:@w" />
+                }
+            </colgroup>
+            <thead>
+                <tr>
+                    @foreach (var c in cols)
+                    {
+                        <th><div class="l">@c</div></th>
+                    }
+                </tr>
+            </thead>
+            @foreach (var r in Model.Rows)
+            {
+                var t = r.T;
+                <tbody>
+                    <tr class="row @(r.Cancelled ? "tx-danger" : "")">
+                        <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                        <td class="ta-l">@Ui.Ln(r.Tour, "fs10 fw6 c-navy")@Ui.Ln(t.No, "c-blue fw7")@Ui.Ln(r.Booked, "fs10 c-mut", "Date of booking")</td>
+                        <td class="ta-c nowrap">
+                            @Ui.Ln(r.Cancelled ? "● Cancelled" : "● Confirmed", "fw6 fs105 " + (r.Cancelled ? "c-red" : "c-grn"))
+                            @if (t.Canx is { } cx)
+                            {
+                                @Ui.Ln(TaxData.Sd(cx), "fs10 c-red fw6")
+                            }
+                        </td>
+                        <td class="ta-l">@Ui.Ln(t.Name, "fw6")@Ui.Ln(r.MobileMasked, "fs10 c-mut", "Mobile number (masked)")</td>
+                        <td class="ta-l">@Ui.Two(t.Exec, t.Branch)</td>
+                        <td class="ta-c nowrap">@Ui.Ln(r.Journey, "", "Journey date")@Ui.Ln(r.Completion, "fs10 c-mut", "Completion date")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(t.Tv), "fw6")@Ui.Ln(r.DiscountText, "fs10 " + (t.Disc > 0 ? "c-red" : "c-mut"))@Ui.Ln("GST @" + r.Rate + "%", "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">@Ui.Ln("GST " + Fmt.Inr(t.Gst), "tx-chip blue", r.GstTip)@Ui.Ln("TCS " + Fmt.Inr(t.OnTicket), "fs10 c-mut", "TCS as per ticket")@Ui.Ln(r.StateType, "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(t.Grand), "fw7")@Ui.Ln("Adv " + Fmt.Inr(r.Advance), "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">
+                            @if (r.Balance != 0)
+                            {
+                                @Ui.Ln(Fmt.Inr(r.Balance), "tx-chip alert")
+                            }
+                            else
+                            {
+                                @Ui.Ln("₹0", "c-mut")
+                            }
+                        </td>
+                    </tr>
+                    <tr class="drill">
+                        <td colspan="@cols.Length">
+                            <div class="drill-in">
+                                <div class="sec" style="flex:1 1 520px">
+                                    <div class="sec-t">@r.Tour</div>
+                                    <div class="facts c4">
+                                        <div><div class="fact-l">GST holder</div><div class="fact-v">@r.HolderText</div></div>
+                                        <div><div class="fact-l">GST number</div><div class="fact-v">@r.GstNoText</div></div>
+                                        <div><div class="fact-l">PAN</div><div class="fact-v">@t.Pan</div></div>
+                                        <div><div class="fact-l">Place of supply</div><div class="fact-v">@r.Place</div></div>
+                                        <div><div class="fact-l">State type</div><div class="fact-v">@r.StateType</div></div>
+                                        <div><div class="fact-l">Payment mode</div><div class="fact-v">@r.PayMode</div></div>
+                                        <div><div class="fact-l">Prev. month advance (excl. GST)</div><div class="fact-v">@r.PrevAdvanceText</div></div>
+                                        <div><div class="fact-l">Prev. month IGST</div><div class="fact-v">@r.PrevIgstText</div></div>
+                                        <div><div class="fact-l">Prev. month CGST</div><div class="fact-v">@r.PrevCgstText</div></div>
+                                        <div><div class="fact-l">Prev. month SGST</div><div class="fact-v">@r.PrevCgstText</div></div>
+                                    </div>
+                                </div>
+                                <div class="sec tx-dr" style="flex:1 1 380px">
+                                    <div class="sec-t">Service vouchers</div>
+                                    <table class="st cards t-gst-d tx-st">
+                                        <thead>
+                                            <tr>
+                                                @foreach (var c in vcols)
+                                                {
+                                                    <th>@c</th>
+                                                }
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var v in r.Vouchers)
+                                            {
+                                                <tr>
+                                                    <td>@Ui.Ln(v.Service)</td>
+                                                    <td>@Ui.Ln(v.No, "c-blue fw6")</td>
+                                                    <td>@Ui.Two(v.Ops, v.Branch)</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            }
+            @if (Model.Rows.Count == 0)
+            {
+                <tbody><tr><td colspan="@cols.Length" class="empty">No GST records for this period.</td></tr></tbody>
+            }
+        </table>
+    </div>
+    @if (Model.Foot is not null)
+    {
+        <partial name="_TaxFoot" model="Model.Foot" />
+    }
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

@@ -1,0 +1,11 @@
+@model CashSheetAuditPage
+@* Matrix / Rows / Detail view switch (plain links to the matching `tab`); hidden on the Cash Ledger. *@
+@if (Model.ViewOptions.Count > 0)
+{
+    <span class="cs-vsw" role="group" aria-label="Cash sheet view">
+        @foreach (var v in Model.ViewOptions)
+        {
+            <a class="@v.Cls" href="@Model.TabHref(v.Value)">@v.Label</a>
+        }
+    </span>
+}

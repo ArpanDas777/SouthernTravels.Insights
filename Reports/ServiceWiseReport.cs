@@ -32,7 +32,8 @@ public static class ServiceWiseReport
 {
     private static readonly TabDef[] Tabs = { new("vendor", "Vendor Wise"), new("city", "Service City-wise"), new("tb", "Trial Balance") };
 
-    public static ServiceWisePage Build(ReportQuery q)
+    /// <param name="filters">The filter dropdowns (from the Operations API); null uses the built-in lists.</param>
+    public static ServiceWisePage Build(ReportQuery q, IReadOnlyList<FilterDef>? filters = null)
     {
         var tab = ReportPage.ResolveTab(q, Tabs);
         var page = new ServiceWisePage
@@ -49,7 +50,7 @@ public static class ServiceWiseReport
             ToolbarClass = tab == "tb" ? "one-line" : "",
             HasExpand = tab != "tb",
             HasFilters = tab != "tb",
-            Filters = CommonFilters.TicketService,
+            Filters = filters ?? CommonFilters.TicketService,
             DateFields = CommonFilters.TicketServiceDates,
         };
 

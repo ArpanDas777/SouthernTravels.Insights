@@ -1,0 +1,137 @@
+@model WeeklySalesTrendPage
+@{
+    string[] dows = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+}
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results" style="flex:none">
+    @* View switch: three plain links (?tab=calendar | line | table). *@
+    <div class="wst-views" role="navigation" aria-label="View">
+        @foreach (var v in WeeklySalesTrendPage.Views)
+        {
+            <a class="@(v.Key == Model.View ? "on" : "")" href="?tab=@v.Key">@v.Label</a>
+        }
+    </div>
+
+    @if (Model.View == "calendar")
+    {
+        <div class="wst">
+            <div class="wst-card">
+                <partial name="_WeeklySalesControls" model="Model" />
+
+                <div class="hm-dow">@foreach (var d in dows) {<span>@d</span>}</div>
+                @foreach (var w in Model.Weeks)
+                {
+                    <div class="hm-week">
+                        @foreach (var x in w)
+                        {
+                            if (x is null)
+                            {
+                                <div class="hm-cell blank"></div>
+                                continue;
+                            }
+                            <div class="hm-cell @(x.Weekend ? "we" : "")" title="@x.Tip">
+                                <div class="hm-heat" style="background:@Model.HeatColor;opacity:@x.Heat.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)"></div>
+                                <div class="hm-in">
+                                    <div class="hm-top"><span><span class="d-full">@WeeklySalesTrendPage.CellDate(x.D)</span><span class="d-short">@x.D.Day.ToString("D2")</span></span><span class="tr @(x.TrendUp ? "c-ok" : "c-dg")" title="Gross sales vs same weekday last week">@x.TrendText</span></div>
+                                    @if (!x.Future)
+                                    {
+                                        <div class="hm-rows">
+                                            <div class="hm-r"><span class="k">Gross sales</span><span class="v c-ok">@Fmt.Inr(x.Gross)</span></div>
+                                            <div class="hm-r"><span class="k">Cancellation</span><span class="v c-dg fw6">−@Fmt.Inr(x.Canx)</span></div>
+                                            <div class="hm-r net"><span class="k">Net sales</span><span class="v sel">@Fmt.Inr(x.Net)</span></div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                @if (Model.Days.Count == 0)
+                {
+                    <div class="empty">No days in the selected range.</div>
+                }
+                <div class="hm-leg"><span>@Model.MetricLabel intensity</span><span>Low</span><span class="grad" style="background:linear-gradient(90deg,#fff,@Model.HeatColor)"></span><span>High</span></div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="wst"><div class="wst-card"><partial name="_WeeklySalesControls" model="Model" /></div></div>
+    }
+
+    @if (Model.View == "line")
+    {
+        <div class="lc-card">
+            <div class="lc-head">
+                <span class="t">Gross, cancellation and net sales</span><span class="spacer"></span>
+                @foreach (var s in Model.Series)
+                {
+                    <span class="lc-key"><span class="ln-sw" style="background:@s.Color"></span>@s.Name</span>
+                }
+                <span class="lc-key"><span class="we-sw"></span>Weekend</span>
+            </div>
+            <div class="lc-plot">
+                @foreach (var k in Model.Ticks)
+                {
+                    <div class="lc-tick" style="bottom:@k.Bottom"><span>@k.Label</span></div>
+                }
+                <div class="lc-cols">@foreach (var c in Model.Cols) {<div class="@(c.Weekend ? "we" : "")"></div>}</div>
+                <svg viewBox="0 0 1000 190" preserveAspectRatio="none">
+                    @foreach (var s in Model.Series)
+                    {
+                        <polyline points="@s.Points" fill="none" stroke="@s.Color" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+                    }
+                </svg>
+                <div class="lc-cols lc-hover">@foreach (var c in Model.Cols) {<div title="@c.Tip"></div>}</div>
+            </div>
+            <div class="lc-x">@foreach (var c in Model.Cols) {<span>@c.Label</span>}</div>
+        </div>
+    }
+
+    @if (Model.View == "table")
+    {
+        @* Monday–Sunday weeks; each week opens with its checkbox (the current week starts open). *@
+        <div class="card keep-scroll wst-tcard" style="--mobmin:480px; margin-top:10px">
+            <table class="gt wst-table">
+                <thead>
+                    <tr>
+                        <th class="chev-h"></th>
+                        <th><div class="l ta-l">Date</div></th>
+                        <th><div class="l ta-l">Day</div></th>
+                        <th><div class="l ta-r">Gross</div></th>
+                        <th><div class="l ta-r">Cancellation</div></th>
+                        <th><div class="l ta-r">Net</div></th>
+                        <th><div class="l ta-r">WoW %</div></th>
+                    </tr>
+                </thead>
+                @foreach (var w in Model.WeekRows)
+                {
+                    <tbody>
+                        <tr class="row wk">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show days" checked="@w.Open" /><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></label></td>
+                            <td colspan="2">@Ui.Ln(w.Label, "fw7 ta-l")</td>
+                            <td class="ta-r">@Ui.Ln(w.Gross, "fw7 c-ok")</td>
+                            <td class="ta-r">@Ui.Ln(w.Canx, "fw7 c-dg")</td>
+                            <td class="ta-r">@Ui.Ln(w.Net, "fw7")</td>
+                            <td class="ta-r">@Ui.Ln(w.Wow, "fw7 " + (w.Wow == "–" ? "c-mut" : w.WowUp ? "c-ok" : "c-dg"))</td>
+                        </tr>
+                        @foreach (var d in w.Days)
+                        {
+                            <tr class="dayrow @(d.Weekend ? "we" : "")">
+                                <td></td>
+                                <td>@Ui.Ln(d.Date, "ta-l")</td>
+                                <td>@Ui.Ln(d.Day, "ta-l c-mut")</td>
+                                <td class="ta-r">@Ui.Ln(d.Gross, d.Future ? "c-mut" : "c-ok")</td>
+                                <td class="ta-r">@Ui.Ln(d.Canx, d.Future ? "c-mut" : "c-dg")</td>
+                                <td class="ta-r">@Ui.Ln(d.Net, d.Future ? "c-mut" : "fw6")</td>
+                                <td class="ta-r">@Ui.Ln(d.Wow, d.Future ? "c-mut" : d.WowUp ? "c-ok" : "c-dg")</td>
+                            </tr>
+                        }
+                    </tbody>
+                }
+            </table>
+        </div>
+    }
+</div>

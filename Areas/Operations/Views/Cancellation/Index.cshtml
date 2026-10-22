@@ -1,0 +1,203 @@
+@model CancellationPage
+@using Microsoft.AspNetCore.Html
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+    string ProfitCls(double v) => v >= 0 ? "c-teal" : "c-red";
+
+    // Vendor settlement: pay the vendor, claim a refund from the vendor, or nothing.
+    IHtmlContent Settle(CanxService v)
+    {
+        var b = new HtmlContentBuilder();
+        if (v.Advance == 0 && v.Final > 0) return b.AppendHtml(Ui.Ln(Fmt.Inr(v.Final), "fw7 c-red")).AppendHtml(Ui.Ln("Pay to vendor", "fs9 c-mut"));
+        if (v.Advance > 0) return b.AppendHtml(Ui.Ln(Fmt.Inr(v.RefundFromVendor), "fw7 c-grn")).AppendHtml(Ui.Ln(Fmt.Inr(v.Advance) + " - " + Fmt.Inr(v.Final), "fs95 c-mut")).AppendHtml(Ui.Ln("Refund from vendor", "fs9 c-teal"));
+        return Ui.Ln("-");
+    }
+}
+@CardCss.For("t-canx-ticket", new[] { "", "Ticket / MBK", "File No.", "Passenger / Pax", "Bk Exec / Branch", "Canx Txn No.", "Canx Date", "Days Left", "Canx Reason", "Total Canx Charge", "Refund / Reissue", "Cancel Profit / %" }, title: 2, lead: 1, extras: new[] { 3, 5, 6, 9, 12 })
+@CardCss.For("t-canx-ticket-v", new[] { "Vendor", "Service", "City", "Total Payable", "Advance Paid", "Canx Charge (Sys)", "Vendor Settlement" }, title: 1, lead: -1)
+@CardCss.For("t-canx-vendor", new[] { "", "Vendor Name / ID", "Service Type(s)", "Cities", "Canx Count", "Total Svc Duration", "Total Payable", "Advance Paid", "Final Payable", "Refund from Vendor" }, title: 2, lead: 1, extras: new[] { 3, 4, 6, 7, 8 })
+@CardCss.For("t-canx-vendor-d", new[] { "Ticket / MBK", "File No.", "Service", "City", "Svc Date", "OPS User", "OPS Status", "Payable", "Advance", "Canx Charge", "Override", "Override Approval", "Final Payable", "Refund from Vendor", "File Profit / SP%" }, title: 1, lead: -1)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    @if (Model.IsTicketView)
+    {
+        string[] cols = { "", "Ticket / MBK", "File No.", "Passenger / Pax", "Bk Exec / Branch", "Canx Txn No.", "Canx Date", "Days Left", "Canx Reason", "Total Canx Charge", "Refund / Reissue", "Cancel Profit / %" };
+        <div class="card">
+                @AlignCss.For("t-canx-ticket", cols)
+            <table class="gt cards t-canx-ticket">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @foreach (var x in Model.Rows)
+                {
+                    <tbody>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                            <td>@Ui.Two(x.T.No, x.T.Mbk, "c-blue")</td>
+                            <td>@Ui.FileNo(x.T.File, "fs105 c-mut")</td>
+                            <td>@Ui.Two(x.T.PaxName, x.T.Pax + " pax", "fw4")</td>
+                            <td>@Ui.Two(x.T.Exec, x.T.Branch)</td>
+                            <td>@Ui.Ln(x.Txn, "fw7 c-blue")</td>
+                            <td>@Ui.Ln(Fmt.Date(x.CancelDate))</td>
+                            <td>@Ui.Ln(x.DaysLeft + "d", "dlp " + x.DaysLeftTone)</td>
+                            <td>@Ui.Ln(x.Reason)</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(x.Total), "fw8 fs14 c-red")@Ui.Ln("incl. GST", "fs9 c-mut")</td>
+                            <td>@Ui.LnHtml(Ui.Badge(x.Type))@Ui.Ln(x.RefundOrReissueAmount, "fs105 c-mut mt3")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(x.Profit), "fw7 " + ProfitCls(x.Profit))@Ui.Ln(x.ProfitPctText, "fs105 " + ProfitCls(x.Profit))</td>
+                        </tr>
+                        <tr class="drill">
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">Customer cancellation details</div>
+                                        <div class="facts">
+                                            <div><div class="fact-l">Cancelled By</div><div class="fact-v">@x.T.Exec · @Fmt.BranchCode(x.T.Branch)</div></div>
+                                            <div><div class="fact-l">Re-issued Ticket</div><div class="fact-v">@(x.Type == "Reissue" ? "TKT-R-" + x.T.No[^3..] : "-")</div></div>
+                                            <div><div class="fact-l">Original Sale (ex-GST)</div><div class="fact-v">@Fmt.Inr(x.OriginalExGst)</div></div>
+                                            <div><div class="fact-l">Advance Paid by Customer</div><div class="fact-v c-grn">@Fmt.Inr(x.PaidByCustomer)</div></div>
+                                            <div><div class="fact-l">Canx Charge (Policy)</div><div class="fact-v">@Fmt.Inr(x.PolicyCharge) / @x.PolicyPct%</div></div>
+                                            <div><div class="fact-l">Override Charge</div><div class="fact-v @(x.Override ? "c-amb" : "")">@(x.Override ? Fmt.Inr(x.BaseCharge) + " / " + x.OverridePct + "%" : "-")</div></div>
+                                            <div><div class="fact-l">Override Reduction</div><div class="fact-v @(x.Override ? "c-grn" : "")">@(x.Override ? Fmt.Inr(x.Reduction) : "-")</div></div>
+                                            <div><div class="fact-l">Override Approved By</div><div class="fact-v">@(x.Override ? x.Approver : "-")</div></div>
+                                            <div><div class="fact-l">Override Date &amp; Time</div><div class="fact-v">@(x.Override ? x.OverrideOn : "-")</div></div>
+                                            <div><div class="fact-l">System Final Canx Charge</div><div class="fact-v c-red">@Fmt.Inr(x.BaseCharge)</div></div>
+                                            <div><div class="fact-l">GST (5%)</div><div class="fact-v">@Fmt.Inr(x.Gst)</div></div>
+                                            <div><div class="fact-l">Charge Basis</div><div class="fact-v">@(x.Override ? "Override applied" : "Policy rate")</div></div>
+                                            <div><div class="fact-l">File Profit / SP%</div><div class="fact-v c-teal">@Fmt.Inr(x.FileProfit) / @x.FileProfitPctText</div></div>
+                                        </div>
+                                    </div>
+                                    <div class="sec">
+                                        <div class="sec-t">Vendor cancellation summary</div>
+                                        <table class="st cards t-canx-ticket-v">
+                                            <thead>
+                                                <tr>
+                                                    <th>Vendor</th><th>Service</th><th>City</th><th class="ta-r">Total Payable</th>
+                                                    <th class="ta-r">Advance Paid</th><th class="ta-r">Canx Charge (Sys)</th><th class="ta-r">Vendor Settlement</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var v in x.Services)
+                                                {
+                                                    <tr>
+                                                        <td>@Ui.Two(v.VendorName, v.S.VendorId, "fw7")</td>
+                                                        <td>@Ui.LnHtml(Ui.Pill(v.S.Type))</td>
+                                                        <td>@Ui.Ln(v.S.City)</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(v.S.Payable))</td>
+                                                        <td class="ta-r">@(v.Advance > 0 ? Ui.Ln(Fmt.Inr(v.Advance), "c-grn") : Ui.Ln("-"))</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(v.Final), "c-red")</td>
+                                                        <td class="ta-r">@Settle(v)</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.Rows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No cancellations found.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+    else
+    {
+        string[] cols = { "", "Vendor Name / ID", "Service Type(s)", "Cities", "Canx Count", "Total Svc Duration", "Total Payable", "Advance Paid", "Final Payable", "Refund from Vendor" };
+        <div class="card">
+                @AlignCss.For("t-canx-vendor", cols)
+            <table class="gt cards t-canx-vendor">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @foreach (var g in Model.VendorRows)
+                {
+                    <tbody>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                            <td>@Ui.Ln(g.Name, "fw7")@Ui.Ln(g.Id)</td>
+                            <td>@Ui.Ln(string.Join(", ", g.Types))</td>
+                            <td>@Ui.Ln(g.Cities)</td>
+                            <td>@Ui.LnHtml(Ui.Count(g.TicketCount))</td>
+                            <td>@Ui.Ln(g.TourDays + "d")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Payable))</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Advance), "c-grn")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Final), "fw7 c-blue")</td>
+                            <td class="ta-r">@Ui.Ln(Fmt.Inr(g.Refund), "fw8 c-grn")</td>
+                        </tr>
+                        <tr class="drill">
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">Vendor cancellation details</div>
+                                        <table class="st cards t-canx-vendor-d">
+                                            <thead>
+                                                <tr>
+                                                    <th>Ticket / MBK</th><th>File No.</th><th>Service</th><th>City</th><th>Svc Date</th><th>OPS User</th><th>OPS Status</th>
+                                                    <th class="ta-r">Payable</th><th class="ta-r">Advance</th><th class="ta-r">Canx Charge</th><th class="ta-r">Override</th>
+                                                    <th>Override Approval</th><th class="ta-r">Final Payable</th><th class="ta-r">Refund from Vendor</th>
+                                                    <th class="ta-r">File Profit / SP%</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var a in g.Items)
+                                                {
+                                                    var x = a.X; var v = a.V;
+                                                    <tr>
+                                                        <td>@Ui.Two(x.T.No, x.T.Mbk, "c-blue")</td>
+                                                        <td>@Ui.FileNo(x.T.File, "fs105 c-mut")</td>
+                                                        <td>@Ui.Ln(v.S.Type)</td>
+                                                        <td>@Ui.Ln(v.S.City)</td>
+                                                        <td>@Ui.Ln(Fmt.Short(v.S.Start))</td>
+                                                        <td>@Ui.Ln(v.S.Ops)</td>
+                                                        <td>@Ui.LnHtml(Ui.Badge(v.S.OpsDisplay))</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(v.S.Payable))</td>
+                                                        <td class="ta-r">@(v.Advance > 0 ? Ui.Ln(Fmt.Inr(v.Advance), "c-grn") : Ui.Ln("-"))</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(v.Final), "c-red fw7")@Ui.Ln(x.VendorPct + "%", "fs10 c-mut")</td>
+                                                        <td class="ta-r">
+                                                            @if (x.Override)
+                                                            {
+                                                                @Ui.Ln(Fmt.Inr(a.OverrideAmount!.Value), "c-amb fw7")
+                                                                @Ui.Ln(a.OverridePctText, "fs10 c-mut")
+                                                            }
+                                                            else
+                                                            {
+                                                                @Ui.Ln("-")
+                                                            }
+                                                        </td>
+                                                        <td>@(x.Override ? Ui.Two(x.Approver, x.OverrideOn) : Ui.Ln("-"))</td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(v.Final), "fw7 c-blue")</td>
+                                                        <td class="ta-r">
+                                                            @if (v.Advance > 0)
+                                                            {
+                                                                @Ui.Ln(Fmt.Inr(v.RefundFromVendor), "c-grn fw7")
+                                                                @Ui.Ln(Fmt.Inr(v.Advance) + " - " + Fmt.Inr(v.Final), "fs10 c-mut")
+                                                            }
+                                                            else
+                                                            {
+                                                                @Ui.Ln("-")
+                                                            }
+                                                        </td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Inr(a.FileProfit), "c-teal fw7")@Ui.Ln(a.FileProfitPct, "fs10 c-mut")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.VendorRows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No vendor cancellations found.</td></tr></tbody>
+                }
+            </table>
+        </div>
+    }
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

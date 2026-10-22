@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using SouthernTravels.Insights.Models;
 
 namespace SouthernTravels.Insights.Infrastructure;
 
