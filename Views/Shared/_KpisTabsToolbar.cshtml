@@ -71,9 +71,9 @@
                     @f.Label
                     <select>
                         <option value="">All</option>
-                        @foreach (var o in f.Options)
+                        @foreach (var o in f.Items)
                         {
-                            <option value="@o">@o</option>
+                            <option value="@o.Value">@o.Text</option>
                         }
                     </select>
                 </label>

@@ -7,4 +7,18 @@
     <RootNamespace>SouthernTravels.Insights</RootNamespace>
   </PropertyGroup>
 
+  <!--
+    Left over from the earlier Core/ + Areas/ layout. Nothing in them is used any more, so they are kept out of the build.
+    Delete these folders/files, then this block can go.
+  -->
+  <ItemGroup>
+    <Compile Remove="Core/**;Areas/**;Common/AccountApiEndpoints.cs;Models/TicketServiceStatusModels.cs" />
+    <Content Remove="Core/**;Areas/**;Views/Operations/**" />
+    <None Remove="Core/**;Areas/**;Views/Operations/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
 </Project>

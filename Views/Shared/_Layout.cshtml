@@ -1,4 +1,13 @@
 @model ReportPage
+@{
+    // The signed-in user comes from the session set at login (SessionMiddleware sends anyone without one to the login page).
+    var userId = Context.Session.GetString("UserId") ?? "";
+    var userName = Context.Session.GetString("UserName") is { Length: > 0 } n ? n : userId;
+    var branch = Context.Session.GetString("HandlingBranch");
+    var isAdmin = Context.Session.GetString("IsAdmin") == "true";
+    var userRole = (isAdmin ? "Administrator" : "User") + (string.IsNullOrEmpty(branch) ? "" : " · " + branch);
+    var initials = string.Concat(userName.Split(new[] { ' ', '.', '@' }, StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,10 +55,13 @@
                     <span>@n.Label</span>
                 </a>
             }
-            <button class="nav-user" type="button" title="@SampleData.Me · @SampleData.MeRole">
-                <span class="avatar">@SampleData.MeInitials</span>
-                <span class="who"><b>@SampleData.Me</b><small>@SampleData.MeRole</small></span>
-            </button>
+            <div class="nav-user" title="@userName · @userRole">
+                <span class="avatar">@(initials.Length > 0 ? initials : "?")</span>
+                <span class="who"><b>@userName</b><small>@userRole</small></span>
+                <a class="logout" href="@Url.Content("~/Account/Logout")" title="Log out" aria-label="Log out">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>
+                </a>
+            </div>
         </aside>
         <label for="navtoggle" class="scrim" aria-label="Close menu"></label>
 

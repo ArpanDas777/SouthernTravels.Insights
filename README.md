@@ -10,36 +10,85 @@ dotnet run --urls http://localhost:5080
 
 Open http://localhost:5080 (defaults to Ticket & Service Status).
 
-| Report | Route | View |
+| Report | Route | Controller · View |
 |---|---|---|
-| Ticket & Service Status | `/Operations/TicketServiceStatus` | `Views/Operations/TicketServiceStatus.cshtml` |
-| OPS User Workload | `/Operations/OpsUserWorkload` | `Views/Operations/OpsUserWorkload.cshtml` |
-| Service wise Report | `/Operations/ServiceWise` | `Views/Operations/ServiceWise.cshtml` |
-| Vendor Payment details | `/Operations/VendorPayment` | `Views/Operations/VendorPayment.cshtml` |
-| Cancellation Report | `/Operations/Cancellation` | `Views/Operations/Cancellation.cshtml` |
-| Advance Report | `/Operations/Advance` | `Views/Operations/Advance.cshtml` |
-| Weekly Sales trend | `/Operations/WeeklySalesTrend` | `Views/Operations/WeeklySalesTrend.cshtml` |
-| Daily EMP Sales | `/Operations/DailyEmpSales` | `Views/Operations/DailyEmpSales.cshtml` |
-| Sales vs Target | `/Operations/SalesVsTarget` | `Views/Operations/SalesVsTarget.cshtml` |
-| Duty Slip Report | `/Operations/DutySlip` | `Views/Operations/DutySlip.cshtml` |
-| TCS Report | `/Operations/Tcs` | `Views/Operations/Tcs.cshtml` |
-| GST Report | `/Operations/Gst` | `Views/Operations/Gst.cshtml` |
-| TDS Report | `/Operations/Tds` | `Views/Operations/Tds.cshtml` |
-| Cash Sheet Audit Report | `/Operations/CashSheetAudit` | `Views/Operations/CashSheetAudit.cshtml` |
-| Balance Pending Report | `/Operations/BalancePending` | `Views/Operations/BalancePending.cshtml` |
+| Ticket & Service Status | `/Operations/TicketServiceStatus` | `TicketServiceStatusController` · `Views/TicketServiceStatus/Index.cshtml` |
+| OPS User Workload | `/Operations/OpsUserWorkload` | `OpsUserWorkloadController` · `Views/OpsUserWorkload/Index.cshtml` |
+| Service wise Report | `/Operations/ServiceWise` | `ServiceWiseController` · `Views/ServiceWise/Index.cshtml` |
+| Vendor Payment details | `/Operations/VendorPayment` | `VendorPaymentController` · `Views/VendorPayment/Index.cshtml` |
+| Cancellation Report | `/Operations/Cancellation` | `CancellationController` · `Views/Cancellation/Index.cshtml` |
+| Advance Report | `/Operations/Advance` | `AdvanceController` · `Views/Advance/Index.cshtml` |
+| Weekly Sales trend | `/Operations/WeeklySalesTrend` | `WeeklySalesTrendController` · `Views/WeeklySalesTrend/Index.cshtml` |
+| Daily EMP Sales | `/Operations/DailyEmpSales` | `DailyEmpSalesController` · `Views/DailyEmpSales/Index.cshtml` |
+| Sales vs Target | `/Operations/SalesVsTarget` | `SalesVsTargetController` · `Views/SalesVsTarget/Index.cshtml` |
+| Duty Slip Report | `/Operations/DutySlip` | `DutySlipController` · `Views/DutySlip/Index.cshtml` |
+| TCS Report | `/Operations/Tcs` | `TcsController` · `Views/Tcs/Index.cshtml` |
+| GST Report | `/Operations/Gst` | `GstController` · `Views/Gst/Index.cshtml` |
+| TDS Report | `/Operations/Tds` | `TdsController` · `Views/Tds/Index.cshtml` |
+| Cash Sheet Audit Report | `/Operations/CashSheetAudit` | `CashSheetAuditController` · `Views/CashSheetAudit/Index.cshtml` |
+| Balance Pending Report | `/Operations/BalancePending` | `BalancePendingController` · `Views/BalancePending/Index.cshtml` |
 
-Service wise Report also has a **Trial Balance** tab (`?tab=tb`, controls in `_TrialBalanceControls.cshtml`).
+Service wise Report also has a **Trial Balance** tab (`?tab=tb`, controls in `Views/ServiceWise/_TrialBalanceControls.cshtml`).
 Sales figures for the three sales reports come from `Data/SalesSample.cs` (seeded sample generator, matches the prototype).
 
-Shared views: `Views/Shared/_Layout.cshtml` (header + sidebar), `_ReportHeader.cshtml` (Period control + title),
+Shared views (`Views/Shared`): `_Layout.cshtml` (header + sidebar), `_ReportHeader.cshtml` (Period control + title),
 `_KpisTabsToolbar.cshtml` (KPIs, view tabs, toolbar, filter panel), `_Pager.cshtml`.
+
+## Project structure
+
+Same layout as STPLCostSheet: one project, plain folders.
+
+```
+Controllers/     AccountController (login), BaseController, OperationsController (/Operations, /Operations/Error)
+                 one controller per report, e.g. GstController -> /Operations/Gst -> Views/Gst/Index.cshtml
+Services/        AccountService, OperationService      (call the API)
+Interfaces/      IAccountService, IOperationService
+Common/          ApiEndpoints, BaseApiService, SessionMiddleware, GlobalExceptionMiddleware, ApiErrorResponse
+Helpers/         ApiClientHelper (POST to the API)
+Security/        SessionSecurityService, SessionKeys
+Models/          ApiResponseViewModel, ReportFilters, Domain, Auth/LoginModels
+Reports/         one builder per report + ReportPage (page chrome, side menu) + CommonFilters
+Data/            SampleData, SalesSample (sample report data)
+Infrastructure/  Fmt, ReportQuery, Ui, CardCss, SalesHtml, RangePicker
+Views/           Shared/ (_Layout, _ReportHeader, _KpisTabsToolbar, _Pager, _TaxFoot, _RangePicker), Account/Login, <Report>/Index
+```
+
+## How the API is called (same as STPLCostSheet)
+
+```
+Controller  ->  Service (: BaseApiService)  ->  ApiClientHelper.PostAsync<ApiResponseViewModel>  ->  API
+                URL = STPLCostSheetAPI:ApiUrl + controller + "/" + action  (names in Common/ApiEndpoints.cs)
+```
+
+Example, the report filters (`Services/OperationService.cs`):
+
+```csharp
+var response = await _apiClient.PostAsync<ApiResponseViewModel>(
+    BuildUrl(ApiEndpoints.Reports, ApiEndpoints.ReportActions.GetOperationsReportFilters),
+    new { tenantID = tenantId, userId = session.UserName, userName = session.UserName, securityKey = session.Token });
+```
+
+- `TicketServiceStatusController` and `ServiceWiseController` call `GetOperationsReportFiltersAsync()` and pass `result.Data` to `CommonFilters.TicketServiceFrom(...)`, which turns the API lists into the dropdowns (value = the API id/code, text = the name). Service Type is not in the API, so it keeps the fixed list.
+- If the API fails, the page still opens with the built-in sample lists.
+- To add an API call: add the action name to `ApiEndpoints`, a method to `IOperationService` / `OperationService`, and the data to `ApiResponseViewModel`.
+
+## Login (OTP, same as STPLCostSheet)
+
+Every page needs a login. Without one, `Common/SessionMiddleware.cs` redirects to `/Account/Login?returnUrl=…`.
+
+1. Enter your email → **Send OTP** calls `Account/SendOTP`.
+2. Enter the 6-digit OTP → **Verify & Login** calls `Account/ValidateUserOTP`.
+3. On success the session gets `UserId`, `UserName`, `Email`, `HandlingBranch`, `accessToken`, `refreshToken`, `IsAdmin`, `TenantId`, `LoginTime`.
+
+- The signed-in name, role and branch show at the bottom of the side menu, with a log-out icon.
+- The session lasts 30 minutes; Send OTP and Verify are limited to 5 tries per minute per IP.
 
 ## How it fits together
 
 - **Data** — `Data/SampleData.cs` holds the prototype's sample tickets/services verbatim. Swap it for a real repository later; the report builders only read `SampleData.Tickets` / `SampleData.Vendors`.
 - **Report builders** — `Reports/*Report.cs` turn the sample data into display-ready page models; views only print values (no calculations in `.cshtml`).
 - **URL state** — only `tab`, `page` and `all` (Show all) are read from the query string; tabs and paging are plain links.
-- **No JavaScript** — there is no `site.js`. Row drill-downs, the sidebar, the filter panel, the Actions menu and the phone card details use CSS only (checkboxes, `:has()`, hover/focus).
+- **No JavaScript on the reports** — there is no `site.js` (only `login.js` on the login page). Row drill-downs, the sidebar, the filter panel, the Actions menu and the phone card details use CSS only (checkboxes, `:has()`, hover/focus).
 - **Styling** — `wwwroot/css/tokens.css` (design-system tokens, unchanged) + `wwwroot/css/site.css`. Fonts: Public Sans + Inter from Google Fonts. Light theme only.
 
 ## Decisions taken from the handoff
@@ -128,7 +177,7 @@ Shared views: `Views/Shared/_Layout.cshtml` (header + sidebar), `_ReportHeader.c
 
 ## Side menu (per SIDE_MENU.md)
 
-- Desktop: the rail starts open (216px). Picking a report links to `?pick=1`; `OperationsController` sets a session cookie (`rail=c`) and redirects to the clean URL, so every page after that starts as the 56px icon rail (full width for the report). Tab and paging links keep the rail collapsed through the cookie.
+- Desktop: the rail starts open (216px). Picking a report links to `?pick=1`; `BaseController` sets a session cookie (`rail=c`) and redirects to the clean URL, so every page after that starts as the 56px icon rail (full width for the report). Tab and paging links keep the rail collapsed through the cookie.
 - The toggle icon flips open / collapsed for the current page; a click on the page beside an open rail collapses it (a transparent scrim label for the same checkbox).
 - Phones (<768px): hamburger opens the 260px drawer over a scrim; closes on scrim click or picking a report (unchanged).
 - Not kept from the doc (needs script or stored state): restoring the last report after a refresh, per-report remembered tabs, and the toggle tooltip changing between "Collapse menu" / "Expand menu".

@@ -1,0 +1,58 @@
+@model TdsPage
+@{
+    string[] cols = { "Bill Date / Expense Head", "Vendor / PAN", "Basic Amount", "GST", "Invoice Value", "Section / TDS Head", "TDS Amount", "Net Payable", "Narration" };
+    string[] widths = { "11%", "14%", "9%", "8%", "9%", "14%", "9%", "9%", "17%" };
+}
+@CardCss.For("t-tds", cols, title: 1)
+@AlignCss.For("t-tds", cols)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    <div class="card">
+        <table class="gt dense cards t-tds tx-t tx-fixed tx-w900">
+            <colgroup>
+                @foreach (var w in widths)
+                {
+                    <col style="width:@w" />
+                }
+            </colgroup>
+            <thead>
+                <tr>
+                    @foreach (var c in cols)
+                    {
+                        <th><div class="l">@c</div></th>
+                    }
+                </tr>
+            </thead>
+            @foreach (var b in Model.Rows)
+            {
+                <tbody>
+                    <tr class="row">
+                        <td class="ta-l">@Ui.Ln(TaxData.Sd(b.Bd), "fw6")@Ui.Ln(b.Head.Name, "fs10 c-mut")</td>
+                        <td class="ta-l">@Ui.Ln(b.Vendor, "fw6")@Ui.Ln(b.Pan, "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(b.Basic), "fw6")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(b.GstText, b.Gst > 0 ? "fw6" : "c-mut", b.GstTip)@Ui.Ln(b.GstSub, "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(b.Invoice), "fw7")</td>
+                        <td class="ta-l">@Ui.Ln(b.Head.Head, "fw6")@Ui.Ln(b.Head.Section, "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(b.Tds), "tx-chip blue")@Ui.Ln(b.TdsSub, "fs10 c-mut")</td>
+                        <td class="ta-r nowrap">@Ui.Ln(Fmt.Inr(b.Net), "tx-chip ok")</td>
+                        <td class="ta-l">@Ui.Ln(b.Narration, "fs105")</td>
+                    </tr>
+                </tbody>
+            }
+            @if (Model.Rows.Count == 0)
+            {
+                <tbody><tr><td colspan="@cols.Length" class="empty">No TDS records for this period.</td></tr></tbody>
+            }
+        </table>
+    </div>
+    @if (Model.Foot is not null)
+    {
+        <partial name="_TaxFoot" model="Model.Foot" />
+    }
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

@@ -1,0 +1,22 @@
+@model CashSheetAuditPage
+@* Toolbar controls after the search box (visual only): the Period selector, or the ledger's From / To dates. *@
+@if (Model.IsLedger)
+{
+    <span class="cs-tbc">
+        <input type="date" aria-label="From date" value="@Model.LedgerFrom" />
+        <span class="to">to</span>
+        <input type="date" aria-label="To date" value="@Model.LedgerTo" />
+    </span>
+}
+else
+{
+    <span class="cs-tbc">
+        <span class="cap">Period</span>
+        <select aria-label="Period">
+            @foreach (var o in CashSheetAuditPage.PeriodChoices)
+            {
+                <option value="@o" selected="@(o == Model.PeriodSelected)">@o</option>
+            }
+        </select>
+    </span>
+}

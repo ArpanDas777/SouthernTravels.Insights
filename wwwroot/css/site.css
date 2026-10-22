@@ -1010,3 +1010,12 @@ tbody:has(.bnx:checked) > tr.row:not(.sub) { display: none; }
 .rp-foot { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-border); font-size: 10.5px; color: var(--color-muted); }
 @media (min-width: 1150px) and (max-width: 1329px) { .toolbar.one-line .tb-range { display: none; } }
 .gt.ledger > tbody > tr.row > td:nth-child(3), .gt.ledger > tbody > tr.row > td:nth-child(3) .ln, .gt.ledger > tbody > tr.row > td:nth-child(3) > div { text-align: left; }
+
+/* Signed-in user and logout (OTP login, see AccountController). The logout icon follows the user name: hidden on the collapsed rail. */
+.sidebar .nav-user { cursor: default; }
+.sidebar .nav-user .logout { margin-left: auto; flex: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: var(--nav-label); text-decoration: none; }
+.sidebar .nav-user .logout:hover, .sidebar .nav-user .logout:focus-visible { color: var(--nav-ink-strong); background: var(--nav-active); }
+@media (min-width: 768px) {
+  .sidebar .nav-user .logout { display: none; }
+  #navtoggle:not(:checked) ~ .app[data-rail="open"] .sidebar .nav-user .logout, #navtoggle:checked ~ .app[data-rail="collapsed"] .sidebar .nav-user .logout { display: flex; }
+}

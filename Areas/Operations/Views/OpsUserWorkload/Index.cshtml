@@ -1,0 +1,183 @@
+@model OpsUserWorkloadPage
+@{
+}
+@CardCss.For("t-wl-drill", new[] { "Ticket No.", "Passenger", "Tour Period", "Name of Service", "Type", "City" }, title: 1, lead: -1)
+@CardCss.For("t-wl-sum", new[] { "OPS User", "Total", "New", "In Progress", "Completed", "% Complete" }, title: 1, lead: -1)
+<partial name="_ReportHeader" model="Model" />
+
+<div class="frag">
+    <div class="branch-cards">
+        @foreach (var b in Model.Branches)
+        {
+            <div class="branch-card">
+                <div class="bc-head"><span>@b.Name</span><span>@b.Code</span></div>
+                <div class="bc-body">
+                    <div class="bc-stat"><div class="bc-v c-navy">@b.Totals.Total</div><div class="bc-l">Total</div></div>
+                    <div class="bc-stat"><div class="bc-v c-teal">@b.Pct.Text</div><div class="bc-l">Completion</div></div>
+                    <div class="bc-stat"><div class="bc-v c-grey">@b.Totals.N</div><div class="bc-l">New</div></div>
+                    <div class="bc-stat"><div class="bc-v c-info">@b.Totals.P</div><div class="bc-l">In Prog</div></div>
+                    <div class="bc-stat"><div class="bc-v c-teal">@b.Totals.C</div><div class="bc-l">Done</div></div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    @if (!Model.IsCalendar)
+    {
+        <div class="card">
+            <table class="gt cards t-wl-sum">
+                <thead>
+                    <tr>
+                        <th><div class="l">OPS User</div></th><th><div class="l">Total</div></th><th><div class="l">New</div></th>
+                        <th><div class="l">In Progress</div></th><th><div class="l">Completed</div></th><th><div class="l">% Complete</div></th>
+                    </tr>
+                </thead>
+                @foreach (var (b, bi) in Model.Branches.Select((b, i) => (b, i)))
+                {
+                    <tbody>
+                        <tr class="banner"><td colspan="6"><label class="bn-l"><input type="checkbox" class="bnx bnx-@bi" aria-label="Collapse @b.Name" />@b.Name Operating Branch</label></td></tr>
+                    </tbody>
+                    foreach (var u in b.Users)
+                    {
+                        <tbody class="br-@bi">
+                            <tr class="row">
+                                <td>@Ui.Ln(u.Name, "fw5")</td>
+                                <td class="ta-c">@Ui.Ln(u.Totals.Total, "fw7 fs14")</td>
+                                @foreach (var c in u.Counts)
+                                {
+                                    @* Clicking a count toggles its drill-down (CSS-only checkbox). *@
+                                    <td class="ta-c"><div class="ln"><label class="num-btn @c.Cls" title="Show @c.Status services"><input type="checkbox" class="wlx wl-@c.Cls" />@c.Count</label></div></td>
+                                }
+                                <td class="ta-c"><div class="ln"><span class="pp @u.Pct.Tone">@u.Pct.Text</span></div></td>
+                            </tr>
+                            @foreach (var c in u.Counts)
+                            {
+                                <tr class="drill d-@c.Cls">
+                                    <td colspan="6">
+                                        <div class="drill-in">
+                                            <div class="sec">
+                                                <div class="sec-t blue">@u.Name — @c.Status Services (@c.Services.Count)</div>
+                                                <table class="st cards t-wl-drill">
+                                                    <thead><tr><th>Ticket No.</th><th>Passenger</th><th>Tour Period</th><th>Name of Service</th><th>Type</th><th>City</th></tr></thead>
+                                                    <tbody>
+                                                        @foreach (var x in c.Services)
+                                                        {
+                                                            <tr>
+                                                                <td>@Ui.Ln(x.T.No, "fw7 c-blue")</td>
+                                                                <td>@Ui.Ln(x.T.PaxName)</td>
+                                                                <td>@Ui.Ln(Fmt.Short(x.T.Start))@Ui.Ln("to " + Fmt.Short(x.T.End), "fs10 c-mut")</td>
+                                                                <td>@Ui.Ln(x.S.Name, "fw6")</td>
+                                                                <td>@Ui.LnHtml(Ui.Pill(x.S.Type))</td>
+                                                                <td>@Ui.Ln(x.S.City)</td>
+                                                            </tr>
+                                                        }
+                                                        @if (c.Services.Count == 0)
+                                                        {
+                                                            <tr><td colspan="6">@Ui.Ln("No tickets found.", "c-mut")</td></tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    }
+                    <tbody>
+                        <tr class="row subtotal">
+                            <td>@Ui.Ln(b.Name + " — Subtotal", "fw7 c-navy")</td>
+                            <td class="ta-c">@Ui.Ln(b.Totals.Total, "fw8 fs15 c-navy")</td>
+                            <td class="ta-c">@Ui.Ln(b.Totals.N, "fw7 c-grey")</td>
+                            <td class="ta-c">@Ui.Ln(b.Totals.P, "fw7 c-info")</td>
+                            <td class="ta-c">@Ui.Ln(b.Totals.C, "fw7 c-teal")</td>
+                            <td class="ta-c"><div class="ln"><span class="pp @b.Pct.Tone">@b.Pct.Text</span></div></td>
+                        </tr>
+                    </tbody>
+                }
+                <tbody>
+                    <tr class="row grand">
+                        <td>@Ui.Ln("GRAND TOTAL", "fw8 c-navy fs13")</td>
+                        <td class="ta-c">@Ui.Ln(Model.GrandTotal.Total, "fw8 fs18 c-navy")</td>
+                        <td class="ta-c">@Ui.Ln(Model.GrandTotal.N, "fw8 c-grey")</td>
+                        <td class="ta-c">@Ui.Ln(Model.GrandTotal.P, "fw8 c-info")</td>
+                        <td class="ta-c">@Ui.Ln(Model.GrandTotal.C, "fw8 c-teal")</td>
+                        <td class="ta-c"><div class="ln"><span class="pp pp-navy">@Model.GrandPct.Text</span></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="cal-legend"><span>Weekend columns are shaded</span></div>
+        <div class="card keep-scroll">
+            <table class="gt cal-grid">
+                <thead>
+                    <tr class="weeks">
+                        <th class="sticky-l" colspan="2"></th>
+                        @foreach (var wk in Model.Weeks)
+                        {
+                            <th colspan="@wk.Days.Count"><span class="wk-btn">▾ @wk.Label</span></th>
+                        }
+                        <th></th>
+                    </tr>
+                    <tr class="cols">
+                        <th class="sticky-l" style="width:112px;min-width:112px"><div class="l">OPS User</div><div class="l2"></div></th>
+                        <th class="sticky-s" style="width:74px;min-width:74px"><div class="l" style="text-align:left">Status</div><div class="l2"></div></th>
+                        @foreach (var d in Model.Days)
+                        {
+                            <th class="ta-c @(d.Weekend ? "we" : "")" style="min-width:0"><div class="l">@d.D</div><div class="l2">@d.Dow</div></th>
+                        }
+                        <th class="ta-c wkcol" style="width:56px;min-width:56px"><div class="l">Total</div><div class="l2"></div></th>
+                    </tr>
+                </thead>
+                @foreach (var b in Model.Branches)
+                {
+                    <tbody>
+                        <tr class="banner"><td colspan="@Model.CalColumns"><label class="bn-l"><input type="checkbox" class="bnx" aria-label="Collapse @b.Name" />@b.Name Operating Branch</label></td></tr>
+                        @foreach (var usr in b.Users)
+                        {
+                            <tr class="row">
+                                <td class="sticky-l bdr">@Ui.Ln(usr.Name, "fw5")</td>
+                                <td class="sticky-s"><div class="ln mt2b"><span class="slbl">New</span></div><div class="ln mt2b"><span class="slbl">In Progress</span></div><div class="ln mt2b"><span class="slbl">Completed</span></div></td>
+                                @for (var i = 0; i < Model.Days.Count; i++)
+                                {
+                                    var s = usr.Cells[i];
+                                    <td class="cc pal1 @(Model.Days[i].Weekend ? "we" : "")"><div class="ln mt2b"><span class="blk b1">@s.N</span></div><div class="ln mt2b"><span class="blk b2">@s.P</span></div><div class="ln mt2b"><span class="blk b3">@s.C</span></div></td>
+                                }
+                                <td class="cc wkcol">@Ui.Ln(usr.Totals.Total, "fw7 c-blue")</td>
+                            </tr>
+                        }
+                        <tr class="row sub">
+                            <td class="sticky-l bdr">@Ui.Ln(b.Name + " Subtotal", "fw7 c-navy")</td>
+                            <td class="sticky-s"><div class="ln mt2b"><span class="slbl">New</span></div><div class="ln mt2b"><span class="slbl">In Progress</span></div><div class="ln mt2b"><span class="slbl">Completed</span></div></td>
+                            @for (var i = 0; i < Model.Days.Count; i++)
+                            {
+                                var s = b.Cells[i];
+                                <td class="cc pal2 @(Model.Days[i].Weekend ? "we" : "")"><div class="ln mt2b"><span class="blk b1">@s.N</span></div><div class="ln mt2b"><span class="blk b2">@s.P</span></div><div class="ln mt2b"><span class="blk b3">@s.C</span></div></td>
+                            }
+                            <td class="cc wkcol">@Ui.Ln(b.Totals.Total, "fw7 c-navy")</td>
+                        </tr>
+                    </tbody>
+                }
+                <tbody>
+                    <tr class="row gtot">
+                        <td class="sticky-l bdr">@Ui.Ln("GRAND TOTAL", "fw8 c-white")</td>
+                        <td class="sticky-s"><div class="ln mt2b"><span class="slbl">New</span></div><div class="ln mt2b"><span class="slbl">In Progress</span></div><div class="ln mt2b"><span class="slbl">Completed</span></div></td>
+                        @for (var i = 0; i < Model.Days.Count; i++)
+                        {
+                            var s = Model.GrandCells[i];
+                            <td class="cc pal3 @(Model.Days[i].Weekend ? "we" : "")"><div class="ln mt2b"><span class="blk b1">@s.N</span></div><div class="ln mt2b"><span class="blk b2">@s.P</span></div><div class="ln mt2b"><span class="blk b3">@s.C</span></div></td>
+                        }
+                        <td class="cc mtot">@Ui.Ln(Model.GrandTotal.Total, "fw8 fs14 c-white")</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

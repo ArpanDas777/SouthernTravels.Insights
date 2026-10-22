@@ -1,0 +1,58 @@
+@model DutySlipPage
+@{
+    string[] cols = { "Ticket No.", "Booking Executive / Branch", "Customer / Pax", "Journey Date", "Days Left", "Initial Duty Slip", "Final Duty Slip", "Final Bill" };
+}
+@CardCss.For("t-duty", cols, title: 1)
+@AlignCss.For("t-duty", cols)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    <div class="card">
+        <table class="gt dense cards t-duty">
+            <thead>
+                <tr>
+                    @foreach (var c in cols)
+                    {
+                        <th><div class="l">@c</div></th>
+                    }
+                </tr>
+            </thead>
+            @foreach (var x in Model.Rows)
+            {
+                <tbody>
+                    <tr class="row" style="@x.Tint">
+                        <td class="ta-l">@Ui.Ln(x.No, "fw7 c-blue")</td>
+                        <td class="ta-l">@Ui.Two(x.Exec, x.Branch)</td>
+                        <td class="ta-l">@Ui.Two(x.Name, x.PaxText)</td>
+                        <td>@Ui.Ln(x.StartText)@Ui.Ln(x.EndText, "fs105 c-mut")</td>
+                        <td>@Ui.Ln(x.DaysLeftText, x.DaysLeftCls)</td>
+                        @foreach (var s in new[] { x.InitialSlip, x.FinalSlip, x.FinalBill })
+                        {
+                            <td>
+                                @if (s.Done)
+                                {
+                                    <div class="ln"><span class="bdg tone-ok" title="@s.Tip">Generated</span></div>
+                                    @Ui.Ln(s.Date, "fs95 c-mut mt3")
+                                    @Ui.Ln(s.By, "fs95 c-mut")
+                                }
+                                else
+                                {
+                                    <div class="ln"><span class="bdg tone-warn">Not generated</span></div>
+                                }
+                            </td>
+                        }
+                    </tr>
+                </tbody>
+            }
+            @if (Model.Rows.Count == 0)
+            {
+                <tbody><tr><td colspan="@cols.Length" class="empty">No duty slip records for this period.</td></tr></tbody>
+            }
+        </table>
+    </div>
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

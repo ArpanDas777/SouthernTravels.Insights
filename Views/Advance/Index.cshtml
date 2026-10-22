@@ -1,0 +1,122 @@
+@model AdvancePage
+@using Microsoft.AspNetCore.Html
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+    string[] cols = { "", "MBK / Ticket", "Ticket Status", "Passenger Info", "Booking Executive", "Tour Period", "Vendor Details", "Service Name", "Service Start / Due", "Service Amount", "Balance / Prev. Adv. Paid", "Adv. Requested", "Requested By", "Approvals", "Adv. Payment" };
+
+}
+@CardCss.For("t-adv", new[] { "", "MBK / Ticket", "Ticket Status", "Passenger Info", "Booking Executive", "Tour Period", "Vendor Details", "Service Name", "Service Start / Due", "Service Amount", "Balance / Prev. Adv. Paid", "Adv. Requested", "Requested By", "Approvals", "Adv. Payment" }, title: 2, lead: 1, extras: new[] { 5, 6, 7, 9, 11, 13 })
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    <div class="card">
+                @AlignCss.For("t-adv", cols)
+        <table class="gt dense cards t-adv">
+            <thead>
+                <tr>
+                    @foreach (var c in cols)
+                    {
+                        <th class="@(c == "Adv. Payment" ? "w1" : "")"><div class="l">@c</div></th>
+                    }
+                </tr>
+            </thead>
+            @foreach (var a in Model.Rows)
+            {
+                var x = a.X; var t = x.T; var s = x.S;
+                <tbody>
+                    <tr class="row">
+                        <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                        <td>@Ui.Two(t.No, t.Mbk, "c-blue")</td>
+                        <td>@Ui.LnHtml(Ui.Badge(t.Status))</td>
+                        <td>@Ui.Two(t.PaxName, t.Pax + " pax")</td>
+                        <td>@Ui.Two(t.Exec, t.Branch)</td>
+                        <td>@Ui.Ln(Fmt.Date(t.Start))@Ui.Ln("to " + Fmt.Date(t.End), "fs105 c-mut")@Ui.Ln(t.Days + "d", "fw7")</td>
+                        <td>@Ui.Ln(x.VendorName, "fw7")@Ui.LnHtml(Ui.Pill(s.Type, "mt3"))</td>
+                        <td>@Ui.Ln(s.Name)</td>
+                        <td>@Ui.Ln(Fmt.Date(s.Start))@Ui.Ln("Due " + a.Due, "fw7 c-brn fs105 mt2")</td>
+                        <td class="ta-r">@Ui.Ln(Fmt.Inr(s.Payable), "fw7")</td>
+                        <td class="ta-r">
+                            @(a.Balance > 0 ? Ui.Ln(Fmt.Inr(a.Balance), "fw7 c-red") : Ui.Ln("Nil", "c-grn"))
+                            @Ui.Ln(a.Previous > 0 ? "Prev. adv. " + Fmt.Inr(a.Previous) : "Prev. adv. -", "fs10 mt2 " + (a.Previous > 0 ? "c-grn" : "c-mut"))
+                        </td>
+                        <td class="ta-r">@Ui.Ln(Fmt.Inr(a.Amount), "adv-amt")@Ui.Ln(a.RequestedOn, "fs95 c-mut mt3")</td>
+                        <td>@Ui.Two(s.Ops, s.OpsBranch)</td>
+                        <td>@Ui.Ln(a.L1Mark.Text, a.L1Mark.Cls, a.L1Mark.Tip)@Ui.Ln(a.L2Mark.Text, a.L2Mark.Cls, a.L2Mark.Tip)</td>
+                        <td class="w1 nowrap">
+                            @if (a.Payment == "Paid")
+                            {
+                                @Ui.LnHtml(Ui.Badge("Paid"))
+                                @Ui.Ln(a.PaidOn, "fs95 c-mut mt2")
+                            }
+                            else if (a.Payment == "Pending")
+                            {
+                                @Ui.LnHtml(Ui.Badge("Pending"))
+                            }
+                            else
+                            {
+                                @Ui.Ln("-")
+                            }
+                        </td>
+                    </tr>
+                    <tr class="drill">
+                        <td colspan="@cols.Length">
+                            <div class="drill-in">
+                                <div class="sec" style="flex:1 1 260px">
+                                    <div class="sec-t">Customer payment</div>
+                                    <div class="bar">
+                                        <div class="track"><div class="fill" style="width:@a.CustomerPaidWidth"></div></div>
+                                        <div class="bar-l"><span>Paid @Fmt.Inr(t.Paid)</span><span>@(t.Balance > 0 ? "Due " + Fmt.Inr(t.Balance) : "Fully paid")</span></div>
+                                    </div>
+                                    <div class="facts">
+                                        <div><div class="fact-l">Base price (incl. margin)</div><div class="fact-v">@Fmt.Inr(x.BaseMargin)</div></div>
+                                        <div><div class="fact-l">Discount</div><div class="fact-v @(x.Discount > 0 ? "c-red" : "")">@(x.Discount > 0 ? "−" + Fmt.Inr(x.Discount) : "-")</div></div>
+                                        <div><div class="fact-l">GST</div><div class="fact-v">@Fmt.Inr(x.Gst)</div></div>
+                                        <div><div class="fact-l">Grand total</div><div class="fact-v">@Fmt.Inr(t.Grand)</div></div>
+                                    </div>
+                                </div>
+                                <div class="sec" style="flex:1.6 1 380px">
+                                    <div class="sec-t">Service &amp; advance</div>
+                                    <div class="bar">
+                                        <div class="track"><div class="fill" style="width:@a.AdvancedWidth"></div></div>
+                                        <div class="bar-l"><span>Advanced @Fmt.Inr(a.Advanced)</span><span>Payable @Fmt.Inr(s.Payable)</span></div>
+                                    </div>
+                                    <div class="facts c3">
+                                        <div><div class="fact-l">This request</div><div class="fact-v c-blue">@Fmt.Inr(a.Amount)</div></div>
+                                        <div><div class="fact-l">Previous advance</div><div class="fact-v">@(a.Previous > 0 ? Fmt.Inr(a.Previous) : "-")</div></div>
+                                        <div><div class="fact-l">Conf. date</div><div class="fact-v @(s.Conf is null ? "c-amb" : "")">@Fmt.Short(s.Conf, "Pending")</div></div>
+                                        <div><div class="fact-l">Conf. no.</div><div class="fact-v">@s.ConfNo</div></div>
+                                        <div><div class="fact-l">Service start</div><div class="fact-v">@Fmt.Short(s.Start)</div></div>
+                                        <div><div class="fact-l">Duration</div><div class="fact-v">@(s.Days)d</div></div>
+                                    </div>
+                                </div>
+                                <div class="sec" style="flex:1 1 260px">
+                                    <div class="sec-t">Approval trail</div>
+                                    <div class="steps">
+                                        @foreach (var st in a.Steps)
+                                        {
+                                            <div class="step @st.State">
+                                                <div class="rail">
+                                                    <span class="dot">@st.Glyph</span>
+                                                    <span class="line @st.LineCls"></span>
+                                                </div>
+                                                <div class="body"><div class="name">@st.Name</div><div class="sub">@st.Sub</div></div>
+                                            </div>
+                                        }
+                                    </div>                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            }
+            @if (Model.Rows.Count == 0)
+            {
+                <tbody><tr><td colspan="@cols.Length" class="empty">No advance requests found.</td></tr></tbody>
+            }
+        </table>
+    </div>
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

@@ -1,0 +1,208 @@
+@model ServiceWisePage
+@using Microsoft.AspNetCore.Html
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+    string VarCls(double v) => v >= 0 ? "c-grn" : "c-red";
+    string[] dcols = { "Ticket", "Pax", "Tour Price", "Vendor", "Service Type / City", "Name of Service", "Category / Meal Plan", "Conf No.", "Start / End", "Sell / Con / Neg", "Variation" };
+}
+@CardCss.For("t-sw-city", new[] { "", "Service City", "Total Duration (days)", "Total Selling", "Total Contracted", "Total Negotiated", "Total Variation", "Total Vendors", "Total Pax" }, title: 2, lead: 1, extras: new[] { 3, 5, 6, 9 })
+@CardCss.For("t-tb", new[] { "Date", "Type", "Particular", "Debit (Paid to vendor)", "Credit (Invoiced)", "Balance" }, title: 1, lead: -1)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    @if (Model.IsTrialBalance)
+    {
+        var tb = Model.Tb!;
+        if (!tb.HasLedger)
+        {
+            <div class="card"><div class="empty">Select a vendor, financial year and month range to view the ledger.</div></div>
+        }
+        else
+        {
+            IHtmlContent Amount(double v, string cls = "") => Ui.Ln(v != 0 ? tb.Money(v) : "-", v != 0 ? cls : "c-mut");
+            <div class="card">
+                <table class="gt ledger cards t-tb">
+                    <colgroup><col style="width:86px"><col style="width:64px"><col><col style="width:100px"><col style="width:100px"><col style="width:120px"></colgroup>
+                    <thead>
+                        <tr>
+                            <th><div class="l ta-l">Date</div></th>
+                            <th><div class="l ta-l">Type</div></th>
+                            <th><div class="l ta-l">Particular</div></th>
+                            <th><div class="l ta-r">Debit (Paid to vendor)</div></th>
+                            <th><div class="l ta-r">Credit (Invoiced)</div></th>
+                            <th><div class="l ta-r">Balance</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="row opening">
+                            <td class="nw">@Ui.Ln(tb.OpeningDate, "c-mut")</td>
+                            <td></td>
+                            <td>@Ui.Ln("Opening balance as on " + tb.OpeningDate, "fw6")</td>
+                            <td class="ta-r zero">@Ui.Ln("-", "c-mut")</td>
+                            <td class="ta-r zero">@Ui.Ln("-", "c-mut")</td>
+                            <td class="ta-r nw">@(tb.Opening == 0 ? Ui.Ln("-", "c-mut") : Ui.Ln(tb.Bal(tb.Opening), "fw7"))</td>
+                        </tr>
+                        @foreach (var m in tb.MonthsList)
+                        {
+                            <tr class="banner mband"><td colspan="6">@m.Label</td></tr>
+                            foreach (var e in m.Entries)
+                            {
+                                <tr class="row">
+                                    <td class="nw">@Ui.Ln(Fmt.Date(e.Date))</td>
+                                    <td>@Ui.LnHtml(Ui.Badge(e.Kind.ToString(), "bdg-s"))</td>
+                                    <td>@Ui.Ln(e.Line1, "fw6 fs11 " + (e.Kind == LedgerKind.Invoice ? "c-blue" : e.Kind == LedgerKind.Cancel ? "c-red" : ""))@Ui.Ln(e.Line2, "fs10 c-mut")@foreach (var tk in e.Tickets) {@Ui.Ln(tk, "fs10 c-blue")}</td>
+                                    <td class="ta-r nw @(e.Debit == 0 ? "zero" : "")">@Amount(e.Debit, "c-grn")</td>
+                                    <td class="ta-r nw @(e.Credit == 0 ? "zero" : "")">@Amount(e.Credit)</td>
+                                    <td class="ta-r nw">@Ui.Ln(tb.Bal(e.Balance), "fw7")</td>
+                                </tr>
+                            }
+                        }
+                        @if (tb.EntryCount == 0)
+                        {
+                            <tr><td colspan="6" class="empty">No ledger activity for this vendor in the selected period.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_TaxFoot" model="tb.Foot" />
+        }
+    }
+    else if (Model.IsVendorView)
+    {
+        string[] cols = { "", "Ticket / File", "Vendor", "Name of Service", "Service Details", "Days", "Service Type / City", "Category / Meal Plan", "Confirmation Details" };
+        <div class="card">
+                @AlignCss.For("t-sw-vendor", cols)
+                @CardCss.For("t-sw-vendor", cols, title: 2, lead: 1, extras: new[] { 5, 6, 8, 9 })
+            <table class="gt cards t-sw-vendor">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @foreach (var x in Model.Rows)
+                {
+                    <tbody>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                            <td>@Ui.Ln(x.T.No, "fw7 fs13 c-blue")@Ui.Ln(x.T.Mbk, "fs10 c-mut")@Ui.FileNo(x.T.File, "fs10 c-mut")</td>
+                            <td>@Ui.Ln(x.VendorName, "fw7")@Ui.Ln(x.S.VendorId, "fs10 c-mut")</td>
+                            <td>@Ui.Ln(x.S.Name, "fw6", x.S.Name)</td>
+                            <td>@Ui.Ln(Fmt.Date(x.S.Start))@Ui.Ln("to", "fs9 c-mut")@Ui.Ln(Fmt.Date(x.S.End))</td>
+                            <td class="ta-c">@Ui.Ln(x.S.Days + "d")</td>
+                            <td>@Ui.LnHtml(Ui.Pill(x.S.Type))@Ui.Ln(x.S.City, "fs10 c-mut mt2")</td>
+                            <td>@Ui.Ln(x.S.Category)@Ui.Ln(x.S.Meal, "fs10 c-mut")</td>
+                            <td>@Ui.Two(x.S.ConfNo, x.S.Conf is null ? "Pending" : Fmt.Date(x.S.Conf.Value), x.S.Conf is null ? "c-amb fw7" : "")</td>
+                        </tr>
+                        <tr class="drill">
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">Financial Details — @x.T.No / @x.T.Mbk</div>
+                                        <div class="facts">
+                                            <div><div class="fact-l">Pax</div><div class="fact-v">@x.T.Pax</div></div>
+                                            <div><div class="fact-l">Base price + margin</div><div class="fact-v">@Fmt.Inr(x.BaseMargin)</div></div>
+                                            <div><div class="fact-l">Discount</div><div class="fact-v @(x.Discount > 0 ? "c-red" : "")">@(x.Discount > 0 ? "−" + Fmt.Inr(x.Discount) : "-")</div></div>
+                                            <div><div class="fact-l">GST</div><div class="fact-v">+@Fmt.Inr(x.Gst)</div></div>
+                                            <div><div class="fact-l">Grand Total</div><div class="fact-v">@Fmt.Inr(x.T.Grand)</div></div>
+                                            <div><div class="fact-l">Selling rate</div><div class="fact-v">@Fmt.Inr(x.S.Sell)</div></div>
+                                            <div><div class="fact-l">Contracted rate</div><div class="fact-v">@Fmt.Inr(x.Contracted)</div></div>
+                                            <div><div class="fact-l">Negotiated rate</div><div class="fact-v c-blue">@Fmt.Inr(x.Negotiated)</div></div>
+                                            <div><div class="fact-l">Variation (Con − Neg)</div><div class="fact-v @VarCls(x.Variation)">@Fmt.Signed(x.Variation)</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.Rows.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No services match filters. Sorted oldest → newest service start date.</td></tr></tbody>
+                }
+            </table>
+        </div>
+        if (Model.Pager is not null)
+        {
+            <partial name="_Pager" model="Model.Pager" />
+        }
+    }
+    else
+    {
+        string[] cols = { "", "Service City","Total Duration (days)", "Total Selling", "Total Contracted", "Total Negotiated", "Total Variation", "Total Vendors", "Total Pax" };
+        <div class="card">
+                @AlignCss.For("t-sw-city", cols)
+            <table class="gt cards t-sw-city">
+                <thead><tr>@foreach (var c in cols) {<th><div class="l">@c</div></th>}</tr></thead>
+                @foreach (var g in Model.Groups)
+                {
+                    <tbody>
+                        <tr class="row">
+                            <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                            <td>@Ui.Two(g.Key, ServiceWisePage.StateOf.GetValueOrDefault(g.Key, ""), "c-navy fs13")</td>
+                            <td>@Ui.Ln(g.Days + "d")</td>
+                            <td>@Ui.Ln(Fmt.Inr(g.Sell), "fw7")</td>
+                            <td>@Ui.Ln(Fmt.Inr(g.Contracted))</td>
+                            <td>@Ui.Ln(Fmt.Inr(g.Negotiated))</td>
+                            <td>@Ui.Ln(Fmt.Signed(g.Variation), "fw7 " + VarCls(g.Variation))</td>
+                            <td>@Ui.LnHtml(Ui.Count(g.Vendors))</td>
+                            <td>@Ui.Ln(g.Pax)</td>
+                        </tr>
+                        <tr class="drill">
+                            <td colspan="@cols.Length">
+                                <div class="drill-in">
+                                    <div class="sec">
+                                        <div class="sec-t">Services</div>
+                                        @CardCss.For("t-sw-city-d", dcols, title: 1)
+                                        <table class="st cards t-sw-city-d">
+                                            <thead>
+                                                <tr>
+                                                    @foreach (var c in dcols) {<th>@c</th>}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var x in g.Items)
+                                                {
+                                                    <tr>
+                                                        <td>@Ui.Ln(x.T.No, "fw7 fs13 c-blue")@Ui.Ln(x.T.Mbk, "fs10 c-mut")</td>
+                                                        <td class="ta-c">@Ui.Ln(x.T.Pax, "fw7")</td>
+                                                        <td class="ta-r">
+                                                            <div class="kv">
+                                                                <span class="k">Base + margin</span><span class="v fw7">@Fmt.Inr(x.BaseMargin)</span>
+                                                                @if (x.Discount > 0) {<span class="k">Discount</span><span class="v c-red">−@Fmt.Inr(x.Discount)</span>}
+                                                                <span class="k">GST</span><span class="v">+@Fmt.Inr(x.Gst)</span>
+                                                                <span class="k">Grand total</span><span class="v fw7">@Fmt.Inr(x.T.Grand)</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>@Ui.Ln(x.VendorName, "fw6")@Ui.Ln(x.S.VendorId, "fs10 c-mut")</td>
+                                                        <td>@Ui.LnHtml(Ui.Pill(x.S.Type))@Ui.Ln(x.S.City, "fs10 c-mut mt2")</td>
+                                                        <td>@Ui.Ln(x.S.Name, "fw6")</td>
+                                                        <td>@Ui.Ln(x.S.Category)@Ui.Ln(x.S.Meal, "fs10 c-mut")</td>
+                                                        <td>@Ui.Ln(x.S.ConfNo, x.S.Conf is null ? "c-amb fw7" : "")</td>
+                                                        <td>@Ui.StartEnd(x.S.Start, x.S.End, x.S.Days)</td>
+                                                        <td class="ta-r">
+                                                            <div class="kv">
+                                                                <span class="k">Sell</span><span class="v fw7">@Fmt.Inr(x.S.Sell)</span>
+                                                                <span class="k">Contracted</span><span class="v c-mut">@Fmt.Inr(x.Contracted)</span>
+                                                                <span class="k">Negotiated</span><span class="v c-blue">@Fmt.Inr(x.Negotiated)</span>
+                                                            </div>
+                                                        </td>
+                                                        <td class="ta-r">@Ui.Ln(Fmt.Signed(x.Variation), "fw7 " + VarCls(x.Variation))</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                }
+                @if (Model.Groups.Count == 0)
+                {
+                    <tbody><tr><td colspan="@cols.Length" class="empty">No data.</td></tr></tbody>
+                }
+            </table>
+        </div>
+        if (Model.Pager is not null)
+        {
+            <partial name="_Pager" model="Model.Pager" />
+        }
+    }
+</div>

@@ -1,0 +1,132 @@
+@model BalancePendingPage
+@using Microsoft.AspNetCore.Html
+@{
+    const string Chevron = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--ink-faint)\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 6 6 6-6 6\"></path></svg>";
+    string[] cols = { "", "Ticket / MBK", "Passenger / Pax", "Tour Name", "Booking Date", "Tour Start Date", "Executive / Branch", "Total Amount", "Received", "Pending Balance", "Next Due", "Overdue Days", "Last Payment", "Ticket Status", "" };
+    string[] recCols = { "Date", "Executive", "Mode", "Payment details", "Amount paid" };
+}
+@CardCss.For("t-bp", cols, title: 2, lead: 1, extras: new[] { 4, 5, 7, 8, 9, 11, 13 })
+@AlignCss.For("t-bp", cols, (11, "center"), (15, "center"))
+@CardCss.For("t-bp-d", recCols, title: 1)
+<partial name="_ReportHeader" model="Model" />
+<partial name="_KpisTabsToolbar" model="Model" />
+
+<div class="results">
+    <div class="card">
+        <table class="gt dense cards t-bp">
+            <thead>
+                <tr>
+                    @foreach (var c in cols)
+                    {
+                        <th class="@(c.Length == 0 ? "w1" : "")"><div class="l">@c</div></th>
+                    }
+                </tr>
+            </thead>
+            @foreach (var x in Model.Rows)
+            {
+                <tbody>
+                    <tr class="row" style="@x.Tint">
+                        <td class="chev"><label class="rx-l"><input type="checkbox" class="rx" aria-label="Show details" />@Html.Raw(Chevron)</label></td>
+                        <td class="ta-l">
+                            @Ui.Ln(x.No, "fw7 c-blue")@Ui.Ln(x.Mbk, "fs105 c-mut")
+                            @if (x.Prev is not null)
+                            {
+                                @Ui.Ln(x.PrevText, "fs95 fw6 c-blue")
+                            }
+                        </td>
+                        <td class="ta-l">@Ui.Two(x.Name, x.PaxText)</td>
+                        <td class="ta-l">@Ui.Ln(x.Tour, "fw6")</td>
+                        <td class="nowrap">@Ui.Ln(x.BookedText)</td>
+                        <td class="nowrap">@Ui.Ln(x.StartText)</td>
+                        <td class="ta-l">@Ui.Two(x.Exec, x.Branch)</td>
+                        <td class="ta-r">@Ui.Ln(x.GrandText, "fw6")</td>
+                        <td class="ta-r">@Ui.Ln(x.ReceivedText, "fw6 c-grn")</td>
+                        <td class="ta-r">@Ui.Ln(x.PendingText, x.IsOverdue ? "bp-od" : "fw8 c-blue")</td>
+                        <td class="nowrap">@Ui.Ln(x.NextDate, "fw6")@Ui.Ln(x.NextSub, "fs95 c-mut")</td>
+                        <td>@(x.IsOverdue ? Ui.Ln(x.OverdueText, "bp-days") : Ui.Ln("–", "c-mut"))</td>
+                        <td class="nowrap">@Ui.Ln(x.LastText ?? "–", x.LastText is null ? "c-mut" : "")</td>
+                        <td>@Ui.LnHtml(Ui.Badge(x.Status))</td>
+                        <td class="w1">
+                            <button type="button" class="bp-send @(x.CanSend ? "" : "off")" title="@x.SendTip" aria-label="Send payment link">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="drill">
+                        <td colspan="@cols.Length">
+                            <div class="drill-in">
+                                <div class="sec">
+                                    <div class="sec-t">@x.DrillTitle</div>
+                                    <div class="bp-sum">
+                                        <div class="bp-box tl">
+                                            <div class="bp-t"><span>Amount summary</span></div>
+                                            <div class="bp-tl">
+                                                @foreach (var l in x.Summary)
+                                                {
+                                                    <div class="bp-it">
+                                                        <div class="bp-dot" style="border-color:@l.Color"></div>
+                                                        <div><div class="bp-row"><span class="fw6">@l.Label</span><b style="color:@l.Color">@l.Value</b></div></div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="bp-box tl">
+                                            <div class="bp-t"><span>Payment schedule</span></div>
+                                            <div class="bp-tl">
+                                                @foreach (var n in x.Nodes)
+                                                {
+                                                    <div class="bp-it">
+                                                        <div class="bp-dot" style="@n.Dot">@n.Glyph</div>
+                                                        <div>
+                                                            <div class="bp-row"><span class="fw6">@n.Short</span><b>@n.Amount</b></div>
+                                                            <div class="bp-cap" style="color:@n.SubColor">@n.Date · @n.Sub</div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="bp-box rc">
+                                            <div class="bp-t"><span>Receipts — transaction wise</span><span>@x.ReceiptCount</span></div>
+                                            <div class="bp-rw">
+                                                <table class="bp-rc st cards t-bp-d">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date</th><th>Executive</th><th>Mode</th><th>Payment details</th><th class="r">Amount paid</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var c in x.Receipts)
+                                                        {
+                                                            <tr>
+                                                                <td class="nw">@c.Date</td>
+                                                                <td>@Ui.Two(c.Exec, c.Branch)</td>
+                                                                <td class="nw">@c.Mode</td>
+                                                                <td><div>@c.Detail</div><div class="fs10 c-grey">@c.Ref · @c.Remark</div></td>
+                                                                <td class="r">@c.Amount</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr><td colspan="4">Total received</td><td class="r c-grn">@x.ReceivedText</td></tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            }
+            @if (Model.Rows.Count == 0)
+            {
+                <tbody><tr><td colspan="@cols.Length" class="empty">No tickets with a pending balance for this selection.</td></tr></tbody>
+            }
+        </table>
+    </div>
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</div>

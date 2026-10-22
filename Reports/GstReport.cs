@@ -1,5 +1,6 @@
 using System.Globalization;
 using SouthernTravels.Insights.Infrastructure;
+using SouthernTravels.Insights.Models;
 
 namespace SouthernTravels.Insights.Reports;
 
